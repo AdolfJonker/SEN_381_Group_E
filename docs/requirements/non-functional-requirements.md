@@ -1,1 +1,10 @@
+# Non-Functional Requirements (NFRs)
+
+| ID | Requirement | Source | Priority | Acceptance Criteria (Measurable) |
+|---|---|---|---|---|
+| NFR001 | Status changes shall become visible to the requester without a separate manual notification step. | Conflict #2 | High | Updated status is visible to the requester on the next page load or within 5 seconds of a staff action (whichever is sooner). |
+| NFR002 | The minimal submission path shall require no more than six fields. | Conflict #1 | Medium | Field count on the minimal submission path ≤ 6. |
+| NFR003 | The system shall restrict access to request data according to role (RBAC). Role-based access control is a long-established standard for managing access in networked systems (Sandhu, et al., 2000), and this project applies the same principle to restrict request data by role. | Security constraint (Master Brief §16) | High | A requester cannot retrieve another requester's data via the UI or by direct request. |
+| NFR004 | The system shall retain a complete and unaltered history of status changes for each request. Tracking requirements, linking them to their sources, the evidence behind them, and associated downstream artefacts is recognised as a persistent challenge in software engineering (Mucha, et al., 2024), which is why this project includes a clear audit trail for all status changes. This non-functional requirement applies specifically to the audit history of each request, which is separate from the change-control process for the requirement baseline outlined in §11 of the Master Brief. | Traceability/accountability need | High | Every status change is logged with timestamp and actor identity; the history is not editable or deletable through normal user actions. |
+| NFR005 | Core submission and status-view functions shall remain usable on desktop and common mobile browser widths. Consistent, well-structured responsive interface design directly supports a sustainable and usable experience across devices (Li, et al., 2022). | Requester accessibility | Medium | Usable at 375px width without horizontal scrolling for the core submission and status-view flows. |
 
