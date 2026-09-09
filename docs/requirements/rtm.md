@@ -8,7 +8,7 @@ In the table below, the Source, Requirement and Acceptance Criteria portions of 
 
 | RTM ID | Source | Req ID | Requirement (summary) | Priority | Acceptance Criteria (summary) | Design Ref (M2) | Test Ref (M3) | Status |
 |---|---|---|---|---|---|---|---|---|
-| RTM-001 | Requester stakeholder need: easy submission; Conflict #1 | FR001 | Submit request with title, description and required category | High | Rejected if category missing; successful submission returns unique request ID | TBD | TBD | Baselined |
+| RTM-001 | Requester stakeholder need: easy submission; (Conflict #1) | FR001 | Submit request with title, description and required category | High | Rejected if category missing; successful submission returns unique request ID | TBD | TBD | Baselined |
 | RTM-002 | Requester stakeholder need: visibility of status | FR002 | Requester can view status of any submitted request | High | Status retrievable within 2 navigation steps of login | TBD | TBD | Baselined |
 | RTM-003 | Requester stakeholder need: history of requests | FR003 | Requester can view history/list of previously submitted requests | Medium | List shows ID, category, date submitted, current status | TBD | TBD | Baselined |
 | RTM-004 | Requester stakeholder need (Conflict #2) | FR004 | Requester receives feedback when status changes | High | Updated status visible without manual refresh or enquiry to staff | TBD | TBD | Baselined |
