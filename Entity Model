@@ -1,0 +1,24 @@
+# 5.1 Entity Model
+
+CivicConnect stores four main data entities. Their attributes, relationships, and requirement links are shown in the table below.
+
+## Relationships
+
+A User submits one or more ServiceRequests. This is a one-to-many relationship. A ServiceRequest may be assigned to one Staff User. This link is optional and nullable.
+
+Each ServiceRequest has many StatusHistory records. A new record is written every time the status changes. These records are never changed or deleted. This is how the system meets NFR004 (immutable audit trail).
+
+A ServiceRequest can also have many Comments. Staff write comments when handling a request (FR010).
+
+Category is not a separate entity. It is a controlled enumerated type on ServiceRequest. A submission is rejected if the category field is missing or not on the list (FR001).
+
+## Entity Table
+
+| Entity | Key Attributes | Notes | Req. Link |
+| --- | --- | --- | --- |
+| User | id, name, email, passwordHash, role (ENUM: Requester / Staff / Management) | Role drives which FilterStrategy is applied (Section 6.2) | NFR003, FR005 |
+| ServiceRequest | id, title, description, category, status (ENUM: Open/Assigned/InProgress/Resolved/Closed), submittedById (FK→User), assignedToId (FK→User, nullable), createdAt, updatedAt, version | version is the optimistic-concurrency counter; incremented on every update (see ADR-DATA-001) | FR001–FR013, NFR001, NFR004 |
+| StatusHistory | id, requestId (FK→ServiceRequest), fromStatus, toStatus, changedById (FK→User), timestamp, note (nullable) | Append-only; rows are never updated or deleted. Written by AuditLogObserver inside the same transaction as the status change. | NFR004, FR009, FR010 |
+| Comment | id, requestId (FK→ServiceRequest), authorId (FK→User), content, createdAt | Linked to a request; visible in the full-detail view. | FR010, FR007 |
+| Category | Controlled enumerated list: Facility Fault, Damaged Equipment, Security Concern, IT Support, Maintenance, Lost Property, Other | Stored as an enum in the database schema. Submission rejected if category is absent or not on this list. | FR001, NFR002 |
+
