@@ -1,0 +1,30 @@
+# 5.2 Transaction & Concurrency Decision
+
+## Problem
+
+A status change touches two records at once. It updates the status on `ServiceRequest` and writes a new `StatusHistory` row. If only one of these writes succeeds, the audit trail (NFR004) is broken. This is a data-integrity risk.
+
+A second problem is concurrent updates. Two staff members could try to update the same request at the same time. Without a safeguard, the second update silently overwrites the first. The audit log would then be incomplete.
+
+## Decision
+
+Every status change runs inside a single database transaction. If either write fails, both are rolled back. The data stays clean.
+
+The `ServiceRequest` entity holds a `version` integer. When a staff member loads a request, the current version is sent to their client. When they submit a status change, the update statement checks that the version in the database still matches. If another update has already changed the version, the database returns zero affected rows. The application detects this and tells the user to reload and try again. This is optimistic concurrency control.
+
+This approach was supported by the A2 persistence research (Task 2 — Six et al., 2022; Chikkanayakanahalli Ramachandrappa, 2024). Optimistic concurrency is preferred over pessimistic locking for web systems where conflicts are rare and holding locks would block other users unnecessarily.
+
+---
+
+## ADR-DATA-001 — Atomic Transaction + Optimistic Concurrency
+
+| Field | Detail |
+| --- | --- |
+| **ID** | ADR-DATA-001 |
+| **Status** | Decided — M2 |
+| **Context** | Status changes must atomically update `ServiceRequest.status` and write a `StatusHistory` row (NFR004). Concurrent staff updates on the same request must not cause silent data loss. |
+| **Decision** | Wrap every status change in a single database transaction. Add a `version` integer to `ServiceRequest`. On every update, use a conditional statement: `WHERE id = ? AND version = ?`. If zero rows are updated, return a conflict error. The client must reload and resubmit. |
+| **Evidence** | A2 Task 2 research: Six et al. (2022) — concurrent write strategies; Chikkanayakanahalli Ramachandrappa (2024) — persistence integrity patterns. NFR004: history not editable or deletable by normal user actions. |
+| **Trade-offs** | Version checks add a small overhead per update. Conflict errors must be handled by the application. This is accepted because status updates are infrequent and NFR004 correctness outweighs write throughput. |
+| **RTM link** | RTM-017 (NFR004); RTM-009 (FR009); RTM-011 (FR011) |
+
