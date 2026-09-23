@@ -1,0 +1,10 @@
+# 5.3 Scalability and SPOF Notes
+
+The database runs as a single instance. If it fails, the whole system is unavailable. This is a known single point of failure (SPOF). The team accepts this risk at M2. CON003 (no project budget) makes managed database replication or failover impractical. This risk is recorded in RISK-006.
+
+The mitigation is to choose a free-tier platform that provides daily backups and point-in-time recovery. The team will confirm this feature is available on the selected platform before committing to it (FEC-003, FEC-004).
+
+Free-tier hosting also limits the number of open database connections. The application will use a connection pool and stay within the platform-documented limit. If load exceeds this limit, requests queue rather than fail immediately. Connection behaviour will be tested before deployment.
+
+The Observer pattern (Section 6.1) keeps status notifications in-process at M2. This avoids adding an external message broker, which would be a second SPOF. The observer design allows notifications to be moved out of process later, without changing the core status logic or the transaction, when the system needs to scale (RISK-007).
+
