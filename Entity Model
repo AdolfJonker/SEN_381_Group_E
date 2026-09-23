@@ -1,0 +1,22 @@
+# Data Model — CivicConnect
+
+CivicConnect stores four main data entities. Their attributes, relationships, and requirement links are shown below.
+
+## Entities
+
+| Entity | Key Attributes | Notes | Req. Link |
+| --- | --- | --- | --- |
+| **User** | `id`, `name`, `email`, `passwordHash`, `role` (ENUM: `Requester` / `Staff` / `Management`) | Role drives which `FilterStrategy` is applied (Section 6.2) | NFR003, FR005 |
+| **ServiceRequest** | `id`, `title`, `description`, `category` (ENUM: `Facility Fault` / `Damaged Equipment` / `Security Concern` / `IT Support` / `Maintenance` / `Lost Property` / `Other`), `status` (ENUM: `Open` / `Assigned` / `InProgress` / `Resolved` / `Closed`), `submittedById` FK→User [N:1], `assignedToId` FK→User nullable [N:0..1], `createdAt`, `updatedAt`, `version` | `version` is the optimistic-concurrency counter; incremented on every update (see ADR-DATA-001). `category` is a database ENUM column on this table — not a separate entity (see Relationships note below). | FR001–FR013, NFR001, NFR004 |
+| **StatusHistory** | `id`, `requestId` FK→ServiceRequest [N:1], `fromStatus`, `toStatus`, `changedById` FK→User [N:1], `timestamp`, `note` (nullable) | Append-only; rows are never updated or deleted. Written by `AuditLogObserver` inside the same transaction as the status change. | NFR004, FR009, FR010 |
+| **Comment** | `id`, `requestId` FK→ServiceRequest [N:1], `authorId` FK→User [N:1], `content`, `createdAt` | Linked to a request; visible in the full-detail view. | FR010, FR007 |
+
+## Relationships
+
+A `User` submits one or more `ServiceRequest`s. This is a one-to-many relationship. A `ServiceRequest` may be assigned to one Staff `User`. This link is optional and nullable.
+
+Each `ServiceRequest` has many `StatusHistory` records. A new record is written every time the status changes. These records are never changed or deleted. This is how the system meets NFR004 (immutable audit trail).
+
+A `ServiceRequest` can also have many `Comment`s. Staff write comments when handling a request (FR010).
+
+`Category` is not a separate entity and does not appear in the entity table. It is a controlled ENUM column on `ServiceRequest`. The allowed values are: `Facility Fault`, `Damaged Equipment`, `Security Concern`, `IT Support`, `Maintenance`, `Lost Property`, `Other`. A submission is rejected if the `category` field is missing or not on this list (FR001).
