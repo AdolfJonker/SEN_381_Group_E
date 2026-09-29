@@ -18,6 +18,26 @@ Decouples transition legality from transition consequences; new consequences (e.
 ## Trade-off / complexity introduced
 An extra layer of indirection for what is currently a single observer (audit logging). Requires that the guard check and the Observer's write happen inside the same transaction as the optimistic-concurrency check (ADR-DATA-001), so an audit record is never written for a transition that does not actually commit.
 
+## Constraints
+CON003 (no project budget, three-person team with limited combined capability) means the guard and 
+Observer must be simple enough for all three team members to build, test and defend independently — not 
+just the person who designed it. The lookup-table guard and single Observer were chosen partly because 
+they are small enough to meet this constraint; a full State-machine pattern would have added more classes 
+than a three-person team can realistically maintain and explain at defence.
+
+## Risks
+A2 research flagged that event-driven/Observer mechanisms are harder to trace through code than direct 
+method calls, since the trigger and the handler are decoupled. This creates a risk (linked to RISK-002: 
+team member unavailable) that if only one team member fully understands the publish/subscribe flow, the 
+others cannot maintain or defend it. Mitigation: the guard-then-publish sequence is documented explicitly 
+in this ADR (see Decision, above) so any team member can trace a status change from request to audit 
+record without needing to read the Observer implementation first.
+
+## Later Consequence
+To be updated in M3. Once implemented, M3 must verify the transition guard and the Observer independently 
+(unit test the guard's allowed-transition table; separately verify the Observer writes StatusHistory only 
+after a successful transaction commit, per the sequencing note in ADR-DATA-001).
+
 ## Affected modules/classes
 - `StatusTransitionGuard` (new)
 - `ServiceRequestService` (status-update method)
