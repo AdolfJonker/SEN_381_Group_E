@@ -1,0 +1,25 @@
+## Access Patterns, Sensitivity and Growth
+
+### Access Patterns
+
+Three queries drive most database activity.
+
+The first is the request list query. It fetches `ServiceRequest`s filtered by the logged-in user's role (FR005). This runs on every page load. It needs an index on `submittedById` for requesters and on `assignedToId` for staff. Without these, the query scans every row in the table as the dataset grows.
+
+The second is the request detail query. It fetches one `ServiceRequest` and joins it with its `StatusHistory` rows and `Comment`s. This runs when a user opens a request to read the full history (FR007, FR010).
+
+The third is the status update. It writes one `ServiceRequest` row and one `StatusHistory` row inside a single transaction (ADR-DATA-001). This runs far less often than reads and is the write path that optimistic concurrency protects.
+
+### Data Sensitivity
+
+`User.email` is personal information. It must not appear in list API responses or application log files. `User.passwordHash` must never be included in any API response; it is stored as a one-way hash and is not reversible. `ServiceRequest` descriptions may contain sensitive operational details, such as a report of a security concern. Role-filtered access via the Strategy pattern ensures that each user sees only the requests they are allowed to see (NFR003).
+
+`StatusHistory` rows reveal who changed a request status and when. The full audit trail should be readable only by Staff and Management roles. Requesters see status transitions on their own requests only.
+
+### Growth Estimate
+
+CivicConnect targets a single campus. Expected load can be hundreds to thousands of service requests per month. This is a small dataset. `StatusHistory` grows at most four rows per request lifecycle — one row per status transition from Open to Closed. Free-tier database storage is enough for this volume at M2. No partitioning or archiving strategy is needed at this milestone. The connection pool is sized to the free-tier limit of the chosen platform (RISK-006, FEC-003). If the campus expands to multiple sites in a later phase, this estimate must be reviewed.
+
+### SPOF
+
+The single-instance database SPOF is documented and accepted in Section 5.3. No additional single points of failure are introduced by the M2 design. The in-process Observer design means no external message broker or notification service is in the critical path for a status change.
