@@ -31,7 +31,7 @@ Select **Candidate 1**:
 | Database | PostgreSQL | **17** (managed instance) | PostgreSQL License |
 | Local/test DB | H2 (test profile only) | Managed by Boot | MPL 2.0 / EPL |
 | Frontend | React | **19.x** | MIT |
-| Bundler / dev server | Vite | **6.x** (or current stable pin) | MIT |
+| Bundler / dev server | Vite | **8.x** (or current stable pin) | MIT |
 | Build (backend) | Maven | 3.9+ | Apache License 2.0 |
 | Build (frontend) | Node.js + npm | Node **22 LTS** (or team-confirmed LTS) | Node licence / various |
 | API style | REST/JSON over HTTPS | `/api/v1/...` | — |
