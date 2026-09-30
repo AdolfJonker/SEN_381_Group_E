@@ -1,6 +1,6 @@
 # ADR-TECH-001: Technology Stack Selection
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Closes:** DEC-003 (stack deferred at M1)
 
 ## Context / Problem
