@@ -4,15 +4,26 @@ Spring Boot API for the CivicConnect UI.
 
 ## What was wrong before
 
-1. `pom.xml` targeted **Java 25**, but this machine has **JDK 21** → Maven failed with `release version 25 not supported`.
+1. The project requires **JDK 25** (`java.version` in `pom.xml`).
 2. There was **no web starter**, entities, migrations, or controllers — only an empty `DemoApplication`.
 3. Postgres is installed, but the `postgres` password is unknown here, so the default **demo** profile uses **in-memory H2**.
+
+## Prerequisites
+
+- **JDK 25** installed and on `PATH` (or set `JAVA_HOME` to it)
+
+```powershell
+java -version
+# should report version 25
+```
 
 ## Run the demo
 
 From this folder:
 
 ```powershell
+$env:JAVA_HOME="C:\Program Files\Microsoft\jdk-25.0.4.101-hotspot"
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
 .\mvnw.cmd spring-boot:run
 ```
 

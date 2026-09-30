@@ -15,8 +15,7 @@
 	<description>CivicConnect demo backend</description>
 
 	<properties>
-		<!-- Installed JDK on this machine is 21; Boot 4 supports 21+ -->
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 	</properties>
 
 	<dependencies>
