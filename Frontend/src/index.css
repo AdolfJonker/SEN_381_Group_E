@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
+
+:root {
+  --bg: #eef3f0;
+  --bg-elevated: #f7faf8;
+  --ink: #14201c;
+  --ink-soft: #3d5249;
+  --muted: #5f756b;
+  --line: #c9d6cf;
+  --brand: #0f5c4c;
+  --brand-deep: #0a3d33;
+  --brand-soft: #d7ebe4;
+  --accent: #c45c26;
+  --accent-soft: #f6e4d8;
+  --danger: #9b2c2c;
+  --shadow: 0 18px 40px rgba(20, 32, 28, 0.08);
+  --radius: 14px;
+  --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  --display: 'Syne', 'IBM Plex Sans', sans-serif;
+
+  color: var(--ink-soft);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(15, 92, 76, 0.12), transparent 34%),
+    radial-gradient(circle at 88% 0%, rgba(196, 92, 38, 0.1), transparent 28%),
+    linear-gradient(180deg, #f4f8f6 0%, var(--bg) 48%, #e7efe9 100%);
+  font-family: var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--brand);
+}
