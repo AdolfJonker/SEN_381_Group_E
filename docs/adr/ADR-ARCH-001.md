@@ -1,6 +1,6 @@
 # ADR-ARCH-001: Modular Monolith
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Closes:** DEC-004 (architecture deferred at M1)
 
 ## Context / Problem
