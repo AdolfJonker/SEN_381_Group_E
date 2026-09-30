@@ -1,0 +1,47 @@
+# Transaction & Concurrency Decision
+
+## Problem
+
+A status change touches two records. It updates the status on `ServiceRequest` and adds a new `StatusHistory` row. If only one write succeeds, the audit trail (NFR004) is broken. A history row for a change that never happened is just as wrong as a change with no history row.
+
+A second problem is concurrent updates. Two staff members could change the same request at the same time, either by assigning it (FR008) or by updating its status (FR009). Without a safeguard, the second update silently overwrites the first. The audit log would then be incomplete.
+
+## Decision
+
+Every status change and assignment runs inside one database transaction. If any step fails, the whole transaction rolls back, and nothing is saved.
+
+`ServiceRequest` holds a `version` integer. The version covers every write to `ServiceRequest`, not only status changes. When staff loads a request, the current version is sent to their client. When they submit a change, the update checks that the version in the database still matches, and it adds 1 to the version. If another user changed the request first, zero rows are updated. The application then rolls back and asks the user to reload and try again. This is optimistic concurrency control.
+
+The steps always run in this order:
+
+1. **Guard:** `StatusTransitionGuard` checks that the transition is legal (FR009) and that the user is allowed to make it (FR011). If not, the change is rejected before any write.
+2. **Conditional update:** `ServiceRequest` is updated `WHERE id = ? AND version = ?` and the version goes up by 1.
+3. **Row check:** If zero rows were updated, a conflict error is raised and the transaction rolls back. The audit observer never runs, so no `StatusHistory` row is written.
+4. **Audit:** Only after exactly one row is updated does `AuditLogObserver` write the `StatusHistory` row. This happens inside the same transaction.
+5. **Commit:** Status, version, and history are saved together.
+6. **Notification:** The requester notification (FR004) runs only after commit. If it fails, the status change stays saved and the failure is logged.
+
+Database constraints act as a backstop. A `CHECK` constraint limits status to the five valid values. `StatusHistory` has a foreign key to `ServiceRequest`.
+
+This decision follows the A2 Task 2 research. A transaction makes related writes all-or-nothing. Optimistic concurrency assumes conflicts are rare, so an update only succeeds if the version is unchanged. Pessimistic locking was rejected because it holds the row until the first user finishes, which blocks other staff. Status updates are short and conflicts are rare, so optimistic concurrency is simpler and enough.
+
+---
+
+## ADR-DATA-001 — Atomic Transaction + Optimistic Concurrency
+
+| Field | Content |
+| --- | --- |
+| **ID** | ADR-DATA-001 |
+| **Status** | Decided — M2 |
+| **Context** | Status changes must update `ServiceRequest` and write a `StatusHistory` row together (NFR004). Concurrent staff updates, whether status or assignment, must not cause silent data loss. |
+| **Constraints** | CON003: small team, free tools, so the design must stay simple. CON005: the audit trail must be designed in from the start. |
+| **Alternatives** | 1) Pessimistic row locking: rejected, because it blocks other staff while a request is being edited. 2) Last write wins: rejected, because it silently loses updates. 3) Commit status first and write the audit later via an outbox (A2 Approach B): rejected, because the audit could lag and it needs extra infrastructure. |
+| **Decision** | Wrap every status change and assignment in one transaction. Add a `version` integer to `ServiceRequest` that covers every write to it. Update with `WHERE id = ? AND version = ?`. Order: guard → conditional update → row check → audit observer → commit → notification. If zero rows are updated, roll back and return a conflict error. The audit observer does not run. |
+| **Trade-offs** | Each update carries a small version-check overhead. Conflict errors must be handled in the UI. This is accepted because updates are infrequent and NFR004 correctness matters more than write speed. |
+| **Risks** | Staff may see conflict errors on busy requests. Mitigation: a clear "reload and try again" message. A new code path could write to `ServiceRequest` without the version check. Mitigation: all writes go through `ServiceRequestService`, and PR review checks for it. |
+| **Evidence** | A2 Task 2 (5.2–5.3): EdPrice-MSFT (2023a) on transactions; Databricks Staff (2026) on optimistic concurrency; Amazon Web Services (2025) on the outbox; OWASP (2019) on server-side validation. NFR004: history not editable or deletable by normal users. |
+| **Later consequence** | Update at M3 with a concurrency test: two parallel updates on one request. One must fail with a conflict, and no extra `StatusHistory` row may appear. |
+| **RTM link** | RTM-008 (FR008); RTM-009 (FR009); RTM-011 (FR011); RTM-017 (NFR004) |
+| **Related ADR** | ADR-DESIGN-001 (Status Transition Guard + Observer) |
+
+
