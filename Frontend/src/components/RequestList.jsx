@@ -1,15 +1,12 @@
 import { useMemo, useState } from 'react'
 import { CATEGORIES, STATUSES, STATUS_LABELS } from '../data/constants'
-import StatusBadge from './StatusBadge'
+import { applyFilters, sortByDate } from '../utils/requestFilters'
+import RequestTable from './RequestTable'
 
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
+/**
+ * Staff work list (FR005, FR006) and Requester "My requests" (FR003).
+ * Staff get search, status/category filters and date sort.
+ */
 export default function RequestList({
   title,
   subtitle,
@@ -17,20 +14,26 @@ export default function RequestList({
   onSelect,
   showFilters = false,
 }) {
+  const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [sortDir, setSortDir] = useState('desc')
 
   const visible = useMemo(() => {
-    let list = [...requests]
-    if (statusFilter) list = list.filter((r) => r.status === statusFilter)
-    if (categoryFilter) list = list.filter((r) => r.category === categoryFilter)
-    list.sort((a, b) => {
-      const diff = new Date(a.createdAt) - new Date(b.createdAt)
-      return sortDir === 'asc' ? diff : -diff
+    const term = search.trim().toLowerCase()
+    const searched = term
+      ? requests.filter(
+          (r) =>
+            r.id.toLowerCase().includes(term) ||
+            r.title.toLowerCase().includes(term),
+        )
+      : requests
+    const filtered = applyFilters(searched, {
+      status: statusFilter,
+      category: categoryFilter,
     })
-    return list
-  }, [requests, statusFilter, categoryFilter, sortDir])
+    return sortByDate(filtered, sortDir)
+  }, [requests, search, statusFilter, categoryFilter, sortDir])
 
   return (
     <section className="panel">
@@ -41,6 +44,15 @@ export default function RequestList({
 
       {showFilters ? (
         <div className="filters">
+          <label>
+            Search
+            <input
+              type="search"
+              placeholder="ID or title"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
           <label>
             Status
             <select
@@ -71,10 +83,7 @@ export default function RequestList({
           </label>
           <label>
             Sort by date
-            <select
-              value={sortDir}
-              onChange={(e) => setSortDir(e.target.value)}
-            >
+            <select value={sortDir} onChange={(e) => setSortDir(e.target.value)}>
               <option value="desc">Newest first</option>
               <option value="asc">Oldest first</option>
             </select>
@@ -82,44 +91,7 @@ export default function RequestList({
         </div>
       ) : null}
 
-      {visible.length === 0 ? (
-        <p className="empty-state">No requests match this view.</p>
-      ) : (
-        <div className="table-wrap">
-          <table className="request-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Submitted</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((req) => (
-                <tr key={req.id}>
-                  <td>
-                    <button
-                      type="button"
-                      className="linkish"
-                      onClick={() => onSelect(req.id)}
-                    >
-                      {req.id}
-                    </button>
-                  </td>
-                  <td>{req.title}</td>
-                  <td>{req.category}</td>
-                  <td>{formatDate(req.createdAt)}</td>
-                  <td>
-                    <StatusBadge status={req.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <RequestTable requests={visible} onSelect={onSelect} />
     </section>
   )
 }

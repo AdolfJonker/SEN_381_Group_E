@@ -37,46 +37,6 @@
   line-height: 1.5;
 }
 
-.role-list {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.role-list button {
-  width: 100%;
-  text-align: left;
-  border: 1px solid var(--line);
-  background: rgba(247, 250, 248, 0.9);
-  border-radius: var(--radius);
-  padding: 1rem 1.1rem;
-  cursor: pointer;
-  display: grid;
-  gap: 0.2rem;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.role-list button:hover {
-  transform: translateY(-2px);
-  border-color: var(--brand);
-  box-shadow: var(--shadow);
-}
-
-.role-name {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.role-meta {
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
 .login-visual {
   position: relative;
   overflow: hidden;
@@ -577,4 +537,118 @@ textarea:focus {
   .request-table td:nth-child(3) {
     display: none;
   }
+}
+
+/* Login form (NFR003) */
+.login-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+  max-width: 26rem;
+}
+
+.login-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.login-form .btn {
+  justify-self: start;
+  min-width: 9rem;
+}
+
+/* Management dashboard (FR012, FR013) */
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+button.summary-card {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+button.summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand);
+  box-shadow: var(--shadow);
+}
+
+button.summary-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.summary-card.active {
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 2px var(--brand);
+}
+
+.summary-grid.secondary {
+  margin-top: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-card.small {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.summary-card.small .summary-value {
+  font-size: 1.35rem;
+}
+
+.summary-card.small .summary-label {
+  margin-top: 0;
+}
+
+.summary-hint {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .panel-header-row {
+    flex-direction: column;
+  }
+
+  .summary-grid.secondary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* NFR005: let grid children shrink so pages fit 375px without horizontal scroll */
+.app-main > * {
+  min-width: 0;
+}
+
+/* Keep clickable and plain summary cards aligned the same way */
+button.summary-card:not(.small) {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
 }
