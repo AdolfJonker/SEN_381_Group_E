@@ -10,21 +10,33 @@ import com.example.demo.domain.UserAccount;
 import com.example.demo.repo.ServiceRequestRepository;
 import com.example.demo.repo.UserAccountRepository;
 import com.example.demo.service.ServiceRequestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 
 @Configuration
 public class DemoDataLoader {
+
+	private static final Logger log = LoggerFactory.getLogger(DemoDataLoader.class);
 
 	@Bean
 	CommandLineRunner seedDemoData(
 			UserAccountRepository users,
 			ServiceRequestRepository requests,
-			ServiceRequestService service
+			ServiceRequestService service,
+			PasswordEncoder passwordEncoder,
+			// No password is committed to the repo (shared rule 9). Set DEMO_PASSWORD
+			// as an environment variable; if it is missing, a random one is generated.
+			@Value("${civicconnect.demo-password:}") String configuredPassword
 	) {
 		return args -> {
 			if (users.count() > 0) {
@@ -32,25 +44,34 @@ public class DemoDataLoader {
 				return;
 			}
 
+			String demoPassword = configuredPassword;
+			if (demoPassword == null || demoPassword.isBlank()) {
+				byte[] bytes = new byte[9];
+				new SecureRandom().nextBytes(bytes);
+				demoPassword = HexFormat.of().formatHex(bytes);
+				log.warn("DEMO_PASSWORD not set. Generated demo password for this run: {}", demoPassword);
+			}
+			String passwordHash = passwordEncoder.encode(demoPassword);
+
 			UserAccount requester = users.save(new UserAccount(
 					"u-req-1",
 					"Aisha Ndlovu",
 					"aisha@campus.edu",
-					"{noop}demo",
+					passwordHash,
 					Role.Requester
 			));
 			UserAccount staff = users.save(new UserAccount(
 					"u-staff-1",
 					"Johan Botha",
 					"johan@campus.edu",
-					"{noop}demo",
+					passwordHash,
 					Role.Staff
 			));
 			users.save(new UserAccount(
 					"u-mgmt-1",
 					"Thandi Mokoena",
 					"thandi@campus.edu",
-					"{noop}demo",
+					passwordHash,
 					Role.Management
 			));
 

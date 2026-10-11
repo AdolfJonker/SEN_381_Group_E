@@ -3,13 +3,16 @@ package com.example.demo.web;
 import com.example.demo.domain.UserAccount;
 import com.example.demo.repo.UserAccountRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Turns the authenticated principal (set by Spring Security) into a UserAccount.
+ * Replaces the old X-User-Id header, which any client could forge.
+ */
 @Component
 public class CurrentUserResolver {
-
-	public static final String USER_HEADER = "X-User-Id";
 
 	private final UserAccountRepository users;
 
@@ -17,11 +20,11 @@ public class CurrentUserResolver {
 		this.users = users;
 	}
 
-	public UserAccount require(String userId) {
-		if (userId == null || userId.isBlank()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing " + USER_HEADER + " header");
+	public UserAccount require(Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login required");
 		}
-		return users.findById(userId)
+		return users.findByEmailIgnoreCase(authentication.getName())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unknown user"));
 	}
 }

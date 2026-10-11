@@ -44,7 +44,7 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints and pick a demo role. The login screen loads users from `GET /api/users`.
+Open the URL Vite prints and sign in with a demo user's email and the demo password (see below).
 
 ## Run the tests
 
@@ -52,23 +52,41 @@ Open the URL Vite prints and pick a demo role. The login screen loads users from
 ./mvnw test
 ```
 
-Currently this runs one Spring context-load test (`DemoApplicationTests`, `demo` profile), which also applies the Flyway migration.
+This runs the context-load test (`DemoApplicationTests`) and the access-control API tests (`AccessControlApiTest`: 401 for missing/wrong credentials, 403 for the wrong role, and a requester cannot open another requester's request).
 
 ## Demo users
 
-| Role | Name | Id |
+| Role | Name | Email (login) |
 |---|---|---|
-| Requester | Aisha Ndlovu | `u-req-1` |
-| Staff | Johan Botha | `u-staff-1` |
-| Management | Thandi Mokoena | `u-mgmt-1` |
+| Requester | Aisha Ndlovu | `aisha@campus.edu` |
+| Staff | Johan Botha | `johan@campus.edu` |
+| Management | Thandi Mokoena | `thandi@campus.edu` |
 
-Calls identify the user with the header `X-User-Id: <id>` (demo auth only; see Known limitations).
+All three share one demo password. It is **not** in the repository. Set it before starting the backend:
+
+```bash
+export DEMO_PASSWORD="<choose-a-password>"
+```
+
+```powershell
+$env:DEMO_PASSWORD="<choose-a-password>"
+```
+
+If `DEMO_PASSWORD` is not set, the backend generates a random password and prints it once in the startup log.
+
+## Authentication and roles (NFR003)
+
+- Every `/api/**` route needs a logged-in user. Login uses HTTP Basic (email + password); the API is stateless, so every call carries the `Authorization` header.
+- Passwords are stored as BCrypt hashes (`{bcrypt}…`).
+- A missing or wrong password returns **401**. A logged-in user with the wrong role returns **403**.
+- `GET /api/auth/me` checks the login and returns the user's id, name, email and role. The frontend uses the role to pick the landing view.
+- Role rules are checked twice: per route in `SecurityConfig`, and per record in `ServiceRequestService` (for example, a requester can only open their own request).
 
 ## Endpoints
 
 | Method | Path | Who | Purpose |
 |---|---|---|---|
-| GET | `/api/users` | anyone | List demo users (login screen) |
+| GET | `/api/auth/me` | any logged-in user | Check login; returns id, name, email, role |
 | GET | `/api/requests` | any user | Requester: own requests. Staff/Management: all requests |
 | GET | `/api/requests/{id}` | any user | Request detail with history and comments (a requester can only open their own) |
 | POST | `/api/requests` | Requester | Submit a request (`title`, `description`, `category`) |
@@ -83,11 +101,11 @@ Errors are returned as JSON `ProblemDetail` with a `message` field.
 
 | Package | Contents |
 |---|---|
-| `config` | `SecurityConfig` (CORS for localhost, stateless), `DemoDataLoader` |
+| `config` | `SecurityConfig` (HTTP Basic, role rules per route, CORS), `AppUserDetailsService`, `DemoDataLoader` |
 | `domain` | `ServiceRequest` (with `@Version`), `StatusHistory`, `Comment`, `UserAccount`, `Role`, `RequestCategory`, `RequestStatus` (FR009 transition table) |
 | `repo` | Spring Data JPA repositories |
 | `service` | `ServiceRequestService`: transactional create / assign / transition / comment / summary, and role checks |
-| `web` | `ServiceRequestController`, `UserController`, `CurrentUserResolver`, `ApiExceptionHandler`, DTOs |
+| `web` | `ServiceRequestController`, `AuthController`, `CurrentUserResolver`, `ApiExceptionHandler`, DTOs |
 
 Related decisions: [ADR-DATA-001](../../docs/adr/ADR-DATA-001) (transaction + optimistic concurrency), [ADR-DESIGN-001](../../docs/adr/ADR-DESIGN-001-status-transition-observer.md) (transition guard + Observer), [ADR-DESIGN-002](../../docs/adr/ADR-DESIGN-002-rbac-strategy.md) (Strategy per role). Full reasoning is in the PED v2.0 (`docs/PED/SEN381_Project_M2_draft.docx`).
 
@@ -113,13 +131,12 @@ Never commit real credentials.
 
 ## Known limitations
 
-- **Demo authentication.** The user is taken from the `X-User-Id` header and Spring Security is set to `permitAll`, so any client can act as any user. There is no login, password check, session or token yet. Spring also logs a generated default password at startup; ignore it.
+- **HTTP Basic.** The browser keeps the email and password in memory and sends them on every call. This is only safe over HTTPS (staging must use HTTPS). There is no logout on the server, no token expiry and no lockout after failed attempts (see Technical Debt Register).
 - **Observer not implemented yet.** The `StatusHistory` row is written directly in `ServiceRequestService`. The observer classes in ADR-DESIGN-001 / ADR-INT-001 (`AuditLogObserver`, `StatusVisibilityUpdater`) do not exist yet.
 - **Strategy not implemented yet.** Role-based list filtering is a `switch` in `ServiceRequestService.listFor`. The `FilterStrategy` classes in ADR-DESIGN-002 do not exist yet. Staff currently see all requests (FR005 scoping pending).
 - **No separate `StatusTransitionGuard`.** The legal-transition table is `RequestStatus.canTransitionTo`.
 - **Concurrency.** `@Version` is present, but an optimistic-lock conflict is not yet mapped to a 409 "reload and try again" response.
 - **Schema.** No `CHECK` constraint on `status` yet, and history rows are mapped with `orphanRemoval` (append-only is not enforced at the database level).
 - **Request IDs** (`SR-1001`, …) come from an in-memory counter; this is not safe for multiple instances.
-- **Personal data.** `GET /api/users` returns email addresses.
-- **Seed data** uses the placeholder password `{noop}demo` and runs on any empty database, including under the postgres profile.
-- **Tests.** Only the context-load test exists.
+- **Seed data** runs on any empty database, including under the postgres profile. Its password comes from `DEMO_PASSWORD`.
+- **Tests.** Context-load and access-control API tests only so far.
