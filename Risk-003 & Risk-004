@@ -1,0 +1,6 @@
+RISK-003 RBAC implemented incorrectly 
+Mitigation: Spring Security replaces permitAll. Roles are checked per route (SecurityConfig) and per record (service layer). Each role is tested on its own (TC-API-SEC-02, TC-API-SEC-03). Residual: staff scope (FR005 Strategy) and the FR011 decision table are [still open / done]. A new route could be added without a role rule.  
+ 
+RISK-004 Sensitive data exposed 
+
+Mitigation: All /api/** routes need a login. /api/users (which listed all emails) was removed. Passwords are stored as BCrypt hashes. The demo password comes from the DEMO_PASSWORD environment variable. A secrets scan (gitleaks) runs in CI. Residual: HTTP Basic sends the password on every call, so staging must use HTTPS. There is no lockout after failed logins (TD-001).
