@@ -1,4 +1,43 @@
-idea/
-targets/
-node_modules/
+# Secrets — never commit real credentials
 .env
+.env.local
+.env.*.local
+*.pem
+*.p12
+credentials.json
+
+# Java / Maven
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.vite/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local / temp
+*.tmp
+*.swp
+.cache/
