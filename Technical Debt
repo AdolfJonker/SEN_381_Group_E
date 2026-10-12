@@ -1,0 +1,9 @@
+This register lists known compromises the team accepted on purpose.
+
+| ID | Debt | Why accepted | Consequence if left | Next action / milestone | Owner |
+|---|---|---|---|---|---|
+| TD-001 | HTTP Basic login. No token expiry, server-side logout or lockout after failed attempts. | Simplest secure option the team can build, test and defend in M3 (ADR-SEC-001). | Repeated password guessing is not slowed down. The password travels on every call. | M4: add lockout or rate limiting; consider a session or token login. | Donya |
+| TD-002 | The UI also filters the list it gets back from the server. | The server filter endpoint (Adolf) was not merged when the UI was built. | All rows are downloaded if the server ignores the filter. Slow with large data. | Remove the client filter once the server filter has its API test. | Donya / Adolf |
+| TD-003 | `RequestDetail.jsx` reads user names from mock data. | Outside the access-control slice. | Names in the detail view can be wrong for new users. | Return names from the API. | Elcke/ Adolf |
+| TD-004 | Login is kept in memory, so a page refresh signs the user out. | Safer than `localStorage`, which page scripts can read. | Small usability cost. | Revisit with TD-001. | Donya |
+| TD-005 | Checkstyle and dependency review warn but do not block merges. | A2 Task 4: warn first, block once a clean baseline exists. | New warnings can be merged unnoticed. | Make them blocking after the first clean run. | Donya |
