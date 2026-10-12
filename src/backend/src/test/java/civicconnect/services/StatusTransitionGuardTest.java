@@ -6,17 +6,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static civicconnect.records.RequestStatus.*;   // ← this line is missing or incomplete
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for the FR009 lifecycle rules. Test IDs refer to
- * docs/testing/status-lifecycle-test-evidence.md. No Spring context and no database.
+ * Unit tests for FR009 lifecycle rules + D2–D6 permission rules.
+ * Test IDs refer to docs/testing/status-lifecycle-test-evidence.md.
+ * No Spring context, no database.
  */
 class StatusTransitionGuardTest {
 
     private final StatusTransitionGuard guard = new StatusTransitionGuard();
+
+    // -------------------------------------------------------------------------
+    // Original structural tests (unchanged)
+    // -------------------------------------------------------------------------
 
     @DisplayName("TC-E-01 legal forward step is allowed")
     @ParameterizedTest(name = "{0} to {1}")
@@ -86,5 +90,64 @@ class StatusTransitionGuardTest {
     void nullStatusIsRejected() {
         assertFalse(guard.isLegalTransition(null, RequestStatus.Assigned));
         assertFalse(guard.isLegalTransition(RequestStatus.Open, null));
+    }
+
+    // -------------------------------------------------------------------------
+    // New permission tests (D2–D6)
+    // -------------------------------------------------------------------------
+
+    @DisplayName("TC-E-04 Staff may assign an Open request")
+    @Test
+    void staffMayAssignOpenRequest() {
+        assertTrue(guard.canPerformTransition(Open, Assigned, "Staff", false));
+    }
+
+    @DisplayName("TC-E-05 Staff who is not the assignee may not move Assigned/InProgress/Resolved")
+    @ParameterizedTest(name = "{0} to {1}")
+    @CsvSource({
+            "Assigned,InProgress",
+            "InProgress,Resolved",
+            "Resolved,Closed"
+    })
+    void nonOwnerStaffMayNotAdvance(RequestStatus from, RequestStatus to) {
+        assertFalse(guard.canPerformTransition(from, to, "Staff", false));
+    }
+
+    @DisplayName("TC-E-06 Assigned Staff may advance their own request")
+    @ParameterizedTest(name = "{0} to {1}")
+    @CsvSource({
+            "Assigned,InProgress",
+            "InProgress,Resolved",
+            "Resolved,Closed"
+    })
+    void ownerStaffMayAdvance(RequestStatus from, RequestStatus to) {
+        assertTrue(guard.canPerformTransition(from, to, "Staff", true));
+    }
+
+    @DisplayName("TC-E-07 Management may perform any legal transition")
+    @ParameterizedTest(name = "{0} to {1}")
+    @CsvSource({
+            "Open,Assigned",
+            "Assigned,InProgress",
+            "InProgress,Resolved",
+            "Resolved,Closed"
+    })
+    void managementMayDoAnyLegalTransition(RequestStatus from, RequestStatus to) {
+        assertTrue(guard.canPerformTransition(from, to, "Management", false));
+        assertTrue(guard.canPerformTransition(from, to, "Management", true));
+    }
+
+    @DisplayName("TC-E-08 Requester may never change status")
+    @Test
+    void requesterMayNeverChangeStatus() {
+        assertFalse(guard.canPerformTransition(Open, Assigned, "Requester", false));
+        assertFalse(guard.canPerformTransition(Assigned, InProgress, "Requester", true));
+    }
+
+    @DisplayName("TC-E-09 Illegal transition is rejected even for Management")
+    @Test
+    void illegalTransitionRejectedEvenForManagement() {
+        assertFalse(guard.canPerformTransition(Open, Closed, "Management", false));
+        assertFalse(guard.canPerformTransition(Assigned, Resolved, "Management", true));
     }
 }
