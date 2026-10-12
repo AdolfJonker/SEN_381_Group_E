@@ -1,0 +1,59 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+}
+
+.page {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.login-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.login-form input,
+.login-form button {
+  font: inherit;
+  padding: 8px 10px;
+}
+
+.login-form button {
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.login-form button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.error {
+  margin: 0;
+  color: #a40000;
+  font-size: 0.9rem;
+}
+
+.demo-hint {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.demo-hint ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
