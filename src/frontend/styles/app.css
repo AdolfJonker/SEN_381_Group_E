@@ -1,3 +1,4 @@
+
 /* ===== Design Tokens ===== */
 :root {
   --navy: #0A192F;
@@ -21,8 +22,15 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  min-width: 0;
+}
+
 body {
   margin: 0;
+  width: 100%;
+  min-width: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -33,6 +41,8 @@ body {
 /* ===== Layout ===== */
 .page {
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -47,41 +57,51 @@ body {
 /* App shell after login */
 .app-shell {
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
+/* ===== App Header ===== */
 .app-header {
   background: var(--navy);
-  color: white;
-  padding: 0.9rem 1.5rem;
+  color: var(--white);
+  padding: 0.9rem clamp(1rem, 4vw, 1.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 4vw, 1.25rem);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .app-header .user-info {
   font-size: 0.9rem;
   opacity: 0.9;
+  overflow-wrap: anywhere;
 }
 
+/* ===== Main Content ===== */
 .app-main {
   flex: 1;
   padding: 1.5rem;
   max-width: 960px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
 }
 
 /* ===== Cards ===== */
 .card {
+  width: 100%;
+  min-width: 0;
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -100,7 +120,10 @@ label {
 input,
 select,
 textarea {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.7rem 0.9rem;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -117,6 +140,7 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.15);
 }
 
+/* ===== Buttons ===== */
 button,
 .btn {
   display: inline-flex;
@@ -124,13 +148,15 @@ button,
   justify-content: center;
   padding: 0.75rem 1.25rem;
   background: var(--button);
-  color: white;
+  color: var(--white);
   border: none;
   border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 button:hover,
@@ -152,7 +178,7 @@ button:disabled {
 
 .btn-outline:hover {
   background: var(--button);
-  color: white;
+  color: var(--white);
 }
 
 /* ===== Utility ===== */
@@ -160,13 +186,14 @@ button:disabled {
   color: #c53030;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+  overflow-wrap: anywhere;
 }
 
 .muted {
   color: var(--muted);
 }
 
-/* ===== Request screens ===== */
+/* ===== Request Screens ===== */
 button,
 .btn,
 input,
@@ -181,17 +208,20 @@ textarea {
 }
 
 .page-title {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
   color: var(--navy);
+  overflow-wrap: anywhere;
 }
 
 .field {
   margin-bottom: 1.1rem;
+  min-width: 0;
 }
 
 .field-hint {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.25rem;
   font-size: 0.8rem;
@@ -204,11 +234,13 @@ textarea {
   flex-wrap: wrap;
 }
 
+/* ===== Alerts ===== */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.95rem;
   margin-bottom: 1rem;
+  overflow-wrap: anywhere;
 }
 
 .alert-error {
@@ -234,14 +266,15 @@ textarea {
   color: var(--navy);
 }
 
-/* Navigation bar */
+/* ===== Navigation ===== */
 .app-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem clamp(1rem, 4vw, 1.5rem);
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto;
+  min-width: 0;
 }
 
 .nav-link {
@@ -249,6 +282,7 @@ textarea {
   color: var(--button);
   border: 1px solid transparent;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-link:hover {
@@ -268,8 +302,12 @@ textarea {
 @media (max-width: 480px) {
   .app-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .app-header .btn-outline {
+    align-self: flex-start;
   }
 
   .app-main {
@@ -277,10 +315,23 @@ textarea {
   }
 
   .card {
-    padding: 1.25rem;
+    padding: clamp(1rem, 4vw, 1.25rem);
   }
 
   .app-nav {
     padding: 0.5rem 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button,
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  .field-hint {
+    flex-wrap: wrap;
   }
 }
