@@ -1,6 +1,7 @@
 package civicconnect.strategies;
 
 import civicconnect.records.ServiceRequest;
+import civicconnect.records.User;
 import civicconnect.repositories.ServiceRequestRepository;
 import org.springframework.stereotype.Component;
 
@@ -18,5 +19,11 @@ public class RequesterFilterStrategy implements FilterStrategy {
     @Override
     public List<ServiceRequest> getFilteredRequests(Long userId) {
         return serviceRequestRepository.findBySubmittedById(userId);
+    }
+
+    @Override
+    public boolean canView(ServiceRequest request, Long userId) {
+        User submitter = request.getSubmittedBy();
+        return submitter != null && userId.equals(submitter.getId());
     }
 }

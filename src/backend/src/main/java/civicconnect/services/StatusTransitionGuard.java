@@ -74,4 +74,14 @@ public class StatusTransitionGuard {
             default -> false;
         };
     }
+
+    /**
+     * The single legal next status, or null when the request is Closed.
+     */
+    public RequestStatus nextStatus(RequestStatus from) {
+        if (from == null) {
+            return null;
+        }
+        return ALLOWED_NEXT.getOrDefault(from, Set.of()).stream().findFirst().orElse(null);
+    }
 }

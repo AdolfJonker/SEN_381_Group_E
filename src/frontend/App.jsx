@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
+import StaffRequestList from "./views/StaffRequestList.jsx";
+import StaffRequestDetail from "./views/StaffRequestDetail.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [screen, setScreen] = useState("home");
+    const [selectedRequestId, setSelectedRequestId] = useState(null);
 
     useEffect(() => {
         fetchCurrentUser()
@@ -27,9 +30,11 @@ export default function App() {
         return <LoginScreen onLogin={setUser} />;
     }
 
-    const isRequester = user.role?.toLowerCase() === "requester";
+    const role = user.role?.toLowerCase();
+    const isRequester = role === "requester";
+    const isStaff = role === "staff";
     const screens = [
-        { id: "home", label: "Home" },
+        ...(isStaff ? [{ id: "requests", label: "Requests" }] : [{ id: "home", label: "Home" }]),
         ...(isRequester ? [{ id: "submit", label: "Submit a request" }] : []),
     ];
 
@@ -45,8 +50,13 @@ export default function App() {
                         className="btn-outline"
                         style={{ marginLeft: "1rem", padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
                         onClick={async () => {
-                            await logout();
+                            try {
+                                await logout();
+                            } catch {
+                                // The session may already have ended.
+                            }
                             setUser(null);
+                            setSelectedRequestId(null);
                             setScreen("home");
                         }}
                     >
@@ -61,8 +71,13 @@ export default function App() {
                         key={s.id}
                         type="button"
                         className="nav-link"
-                        aria-current={screen === s.id ? "page" : undefined}
-                        onClick={() => setScreen(s.id)}
+                        aria-current={
+                            (isStaff ? s.id === "requests" : screen === s.id) ? "page" : undefined
+                        }
+                        onClick={() => {
+                            setSelectedRequestId(null);
+                            setScreen(s.id);
+                        }}
                     >
                         {s.label}
                     </button>
@@ -70,9 +85,28 @@ export default function App() {
             </nav>
 
             <main className="app-main">
-                {screen === "submit" && isRequester ? (
+                {isStaff && screen === "request" && (
+                    <StaffRequestDetail
+                        requestId={selectedRequestId}
+                        currentUserId={user.id}
+                        onBack={() => {
+                            setSelectedRequestId(null);
+                            setScreen("requests");
+                        }}
+                    />
+                )}
+                {isStaff && screen !== "request" && (
+                    <StaffRequestList
+                        onOpen={(id) => {
+                            setSelectedRequestId(id);
+                            setScreen("request");
+                        }}
+                    />
+                )}
+                {!isStaff && screen === "submit" && isRequester ? (
                     <SubmitRequest />
-                ) : (
+                ) : null}
+                {!isStaff && screen !== "submit" && (
                     <div className="card">
                         <h2 className="page-title">Welcome, {user.name}</h2>
                         <p className="muted">

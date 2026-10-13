@@ -1,6 +1,7 @@
 package civicconnect.api;
 
 import civicconnect.api.dto.ErrorResponse;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -27,5 +28,11 @@ public class ApiExceptionHandler {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
         String message = ex.getReason() == null ? status.getReasonPhrase() : ex.getReason();
         return ResponseEntity.status(status).body(ErrorResponse.of(message));
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(OptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of("This request was updated by someone else. Reload and try again."));
     }
 }

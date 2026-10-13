@@ -75,3 +75,22 @@ export function validateRequestForm({ title, description, category }) {
     },
   };
 }
+
+export const COMMENT_MAX = 2000;
+
+export function validateComment(content) {
+  const trimmed = (content ?? "").trim();
+  const errors = {};
+
+  if (!trimmed) {
+    errors.content = "Write a comment before saving.";
+  } else if (trimmed.length > COMMENT_MAX) {
+    errors.content = `Comment must be at most ${COMMENT_MAX} characters.`;
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    values: { content: trimmed },
+  };
+}

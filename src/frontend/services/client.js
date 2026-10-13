@@ -68,4 +68,29 @@ export async function fetchMyRequests() {
   return apiRequest("/requests");
 }
 
+export async function fetchRequest(id) {
+  return apiRequest(`/requests/${id}`);
+}
+
+export async function acceptRequest(id, version) {
+  return apiRequest(`/requests/${id}/accept`, {
+    method: "POST",
+    body: JSON.stringify({ version }),
+  });
+}
+
+export async function updateRequestStatus(id, status, version) {
+  return apiRequest(`/requests/${id}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status, version }),
+  });
+}
+
+export async function addRequestComment(id, content) {
+  return apiRequest(`/requests/${id}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+}
+
 export { API_BASE_URL };

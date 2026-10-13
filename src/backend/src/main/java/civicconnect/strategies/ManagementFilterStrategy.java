@@ -19,4 +19,9 @@ public class ManagementFilterStrategy implements FilterStrategy {
     public List<ServiceRequest> getFilteredRequests(Long userId) {
         return serviceRequestRepository.findAll();
     }
+
+    @Override
+    public boolean canView(ServiceRequest request, Long userId) {
+        return true;
+    }
 }
