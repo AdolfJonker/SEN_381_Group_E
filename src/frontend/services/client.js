@@ -57,4 +57,15 @@ export async function checkBackendHealth() {
   return apiRequest("/health");
 }
 
+export async function createRequest({ title, description, category }) {
+  return apiRequest("/requests", {
+    method: "POST",
+    body: JSON.stringify({ title, description, category }),
+  });
+}
+
+export async function fetchMyRequests() {
+  return apiRequest("/requests");
+}
+
 export { API_BASE_URL };

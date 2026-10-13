@@ -1,7 +1,10 @@
+
 /* ===== Design Tokens ===== */
 :root {
   --navy: #0A192F;
   --navy-hover: #112240;
+  --button: #000080;
+  --button-hover: #0000A0;
   --white: #FFFFFF;
   --bg: #F4F7FA;
   --border: #E2E8F0;
@@ -19,8 +22,15 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  min-width: 0;
+}
+
 body {
   margin: 0;
+  width: 100%;
+  min-width: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -31,6 +41,8 @@ body {
 /* ===== Layout ===== */
 .page {
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -45,41 +57,51 @@ body {
 /* App shell after login */
 .app-shell {
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
+/* ===== App Header ===== */
 .app-header {
   background: var(--navy);
-  color: white;
-  padding: 0.9rem 1.5rem;
+  color: var(--white);
+  padding: 0.9rem clamp(1rem, 4vw, 1.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 4vw, 1.25rem);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .app-header .user-info {
   font-size: 0.9rem;
   opacity: 0.9;
+  overflow-wrap: anywhere;
 }
 
+/* ===== Main Content ===== */
 .app-main {
   flex: 1;
   padding: 1.5rem;
   max-width: 960px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
 }
 
 /* ===== Cards ===== */
 .card {
+  width: 100%;
+  min-width: 0;
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -98,7 +120,10 @@ label {
 input,
 select,
 textarea {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.7rem 0.9rem;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -111,29 +136,32 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.12);
+  border-color: var(--button);
+  box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.15);
 }
 
+/* ===== Buttons ===== */
 button,
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.25rem;
-  background: #000080;          /* Deep Navy - forced */
-  color: white;
+  background: var(--button);
+  color: var(--white);
   border: none;
   border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 button:hover,
 .btn:hover {
-  background: #112240;          /* Slightly lighter navy */
+  background: var(--button-hover);
 }
 
 button:disabled {
@@ -144,13 +172,13 @@ button:disabled {
 /* Secondary / outline button */
 .btn-outline {
   background: transparent;
-  color: var(--navy);
-  border: 1px solid var(--navy);
+  color: var(--button);
+  border: 1px solid var(--button);
 }
 
 .btn-outline:hover {
-  background: var(--navy);
-  color: white;
+  background: var(--button);
+  color: var(--white);
 }
 
 /* ===== Utility ===== */
@@ -158,18 +186,128 @@ button:disabled {
   color: #c53030;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+  overflow-wrap: anywhere;
 }
 
 .muted {
   color: var(--muted);
 }
 
+/* ===== Request Screens ===== */
+button,
+.btn,
+input,
+select {
+  min-height: 44px;
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.page-title {
+  margin: 0 0 0.25rem;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+
+.field {
+  margin-bottom: 1.1rem;
+  min-width: 0;
+}
+
+.field-hint {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Alerts ===== */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.alert-error {
+  background: #FFF5F5;
+  border: 1px solid #FEB2B2;
+  color: #9B2C2C;
+}
+
+.alert-success {
+  background: #F0FFF4;
+  border: 1px solid #9AE6B4;
+  color: #22543D;
+}
+
+/* Sign out button on the navy header */
+.app-header .btn-outline {
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.app-header .btn-outline:hover {
+  background: var(--white);
+  color: var(--navy);
+}
+
+/* ===== Navigation ===== */
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem clamp(1rem, 4vw, 1.5rem);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.nav-link {
+  background: transparent;
+  color: var(--button);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-link:hover {
+  background: var(--subtle);
+}
+
+.nav-link[aria-current="page"] {
+  background: var(--button);
+  color: var(--white);
+}
+
+.nav-link[aria-current="page"]:hover {
+  background: var(--button-hover);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 480px) {
   .app-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .app-header .btn-outline {
+    align-self: flex-start;
   }
 
   .app-main {
@@ -177,6 +315,23 @@ button:disabled {
   }
 
   .card {
-    padding: 1.25rem;
+    padding: clamp(1rem, 4vw, 1.25rem);
+  }
+
+  .app-nav {
+    padding: 0.5rem 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button,
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  .field-hint {
+    flex-wrap: wrap;
   }
 }
