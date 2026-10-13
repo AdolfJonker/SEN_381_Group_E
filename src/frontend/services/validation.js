@@ -29,3 +29,49 @@ export function validateLoginForm({ email, password }) {
     },
   };
 }
+
+export const REQUEST_CATEGORIES = [
+  "Facility Fault",
+  "Damaged Equipment",
+  "Security Concern",
+  "IT Support",
+  "Maintenance",
+  "Lost Property",
+  "Other",
+];
+export const TITLE_MAX = 200;
+export const DESCRIPTION_MAX = 2000;
+
+export function validateRequestForm({ title, description, category }) {
+  const errors = {};
+  const trimmedTitle = (title ?? "").trim();
+  const trimmedDescription = (description ?? "").trim();
+
+  if (!trimmedTitle) {
+    errors.title = "Title is required.";
+  } else if (trimmedTitle.length > TITLE_MAX) {
+    errors.title = `Title must be at most ${TITLE_MAX} characters.`;
+  }
+
+  if (!trimmedDescription) {
+    errors.description = "Description is required.";
+  } else if (trimmedDescription.length > DESCRIPTION_MAX) {
+    errors.description = `Description must be at most ${DESCRIPTION_MAX} characters.`;
+  }
+
+  if (!category) {
+    errors.category = "Choose a category.";
+  } else if (!REQUEST_CATEGORIES.includes(category)) {
+    errors.category = "Choose a category from the list.";
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    values: {
+      title: trimmedTitle,
+      description: trimmedDescription,
+      category,
+    },
+  };
+}

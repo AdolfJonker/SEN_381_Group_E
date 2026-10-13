@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
+import SubmitRequest from "./views/SubmitRequest.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [screen, setScreen] = useState("home");
 
     useEffect(() => {
         fetchCurrentUser()
@@ -25,6 +27,12 @@ export default function App() {
         return <LoginScreen onLogin={setUser} />;
     }
 
+    const isRequester = user.role?.toLowerCase() === "requester";
+    const screens = [
+        { id: "home", label: "Home" },
+        ...(isRequester ? [{ id: "submit", label: "Submit a request" }] : []),
+    ];
+
     // ----- Logged-in App Shell -----
     return (
         <div className="app-shell">
@@ -39,6 +47,7 @@ export default function App() {
                         onClick={async () => {
                             await logout();
                             setUser(null);
+                            setScreen("home");
                         }}
                     >
                         Sign out
@@ -46,19 +55,35 @@ export default function App() {
                 </div>
             </header>
 
+            <nav className="app-nav" aria-label="Main">
+                {screens.map((s) => (
+                    <button
+                        key={s.id}
+                        type="button"
+                        className="nav-link"
+                        aria-current={screen === s.id ? "page" : undefined}
+                        onClick={() => setScreen(s.id)}
+                    >
+                        {s.label}
+                    </button>
+                ))}
+            </nav>
+
             <main className="app-main">
-                <div className="card">
-                    <h2 style={{ marginTop: 0, color: "var(--navy)" }}>
-                        Welcome, {user.name}
-                    </h2>
-                    <p className="muted">
-                        You are signed in as <strong>{user.role}</strong>.
-                    </p>
-                    <p>
-                        This is the temporary home screen.
-                        Next we will add the real screens for your role.
-                    </p>
-                </div>
+                {screen === "submit" && isRequester ? (
+                    <SubmitRequest />
+                ) : (
+                    <div className="card">
+                        <h2 className="page-title">Welcome, {user.name}</h2>
+                        <p className="muted">
+                            You are signed in as <strong>{user.role}</strong>.
+                        </p>
+                        <p>
+                            This is the temporary home screen.
+                            Next we will add the real screens for your role.
+                        </p>
+                    </div>
+                )}
             </main>
         </div>
     );

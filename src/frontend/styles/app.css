@@ -2,6 +2,8 @@
 :root {
   --navy: #0A192F;
   --navy-hover: #112240;
+  --button: #000080;
+  --button-hover: #0000A0;
   --white: #FFFFFF;
   --bg: #F4F7FA;
   --border: #E2E8F0;
@@ -111,8 +113,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.12);
+  border-color: var(--button);
+  box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.15);
 }
 
 button,
@@ -121,7 +123,7 @@ button,
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.25rem;
-  background: #000080;          /* Deep Navy - forced */
+  background: var(--button);
   color: white;
   border: none;
   border-radius: 8px;
@@ -133,7 +135,7 @@ button,
 
 button:hover,
 .btn:hover {
-  background: #112240;          /* Slightly lighter navy */
+  background: var(--button-hover);
 }
 
 button:disabled {
@@ -144,12 +146,12 @@ button:disabled {
 /* Secondary / outline button */
 .btn-outline {
   background: transparent;
-  color: var(--navy);
-  border: 1px solid var(--navy);
+  color: var(--button);
+  border: 1px solid var(--button);
 }
 
 .btn-outline:hover {
-  background: var(--navy);
+  background: var(--button);
   color: white;
 }
 
@@ -162,6 +164,104 @@ button:disabled {
 
 .muted {
   color: var(--muted);
+}
+
+/* ===== Request screens ===== */
+button,
+.btn,
+input,
+select {
+  min-height: 44px;
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.page-title {
+  margin: 0 0 0.25rem 0;
+  color: var(--navy);
+}
+
+.field {
+  margin-bottom: 1.1rem;
+}
+
+.field-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.alert-error {
+  background: #FFF5F5;
+  border: 1px solid #FEB2B2;
+  color: #9B2C2C;
+}
+
+.alert-success {
+  background: #F0FFF4;
+  border: 1px solid #9AE6B4;
+  color: #22543D;
+}
+
+/* Sign out button on the navy header */
+.app-header .btn-outline {
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.app-header .btn-outline:hover {
+  background: var(--white);
+  color: var(--navy);
+}
+
+/* Navigation bar */
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.nav-link {
+  background: transparent;
+  color: var(--button);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: var(--subtle);
+}
+
+.nav-link[aria-current="page"] {
+  background: var(--button);
+  color: var(--white);
+}
+
+.nav-link[aria-current="page"]:hover {
+  background: var(--button-hover);
 }
 
 /* ===== Responsive ===== */
@@ -178,5 +278,9 @@ button:disabled {
 
   .card {
     padding: 1.25rem;
+  }
+
+  .app-nav {
+    padding: 0.5rem 1rem;
   }
 }
