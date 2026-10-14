@@ -27,7 +27,10 @@ async function apiRequest(path, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(await parseError(response));
+    const error = new Error(await parseError(response));
+    // Keep the HTTP status so views can tell 401 (sign in again) from 403 (role not allowed).
+    error.status = response.status;
+    throw error;
   }
 
   if (response.status === 204) {
@@ -66,6 +69,32 @@ export async function createRequest({ title, description, category }) {
 
 export async function fetchMyRequests() {
   return apiRequest("/requests");
+}
+
+// ----- Request views (FR005, FR012, FR013) -----
+
+function toQuery(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) query.set(key, value);
+  });
+  const text = query.toString();
+  return text ? `?${text}` : "";
+}
+
+/**FR005: requests the signed-in role may see (the server applies the role's strategy).*/
+
+export async function fetchRequests(filters = {}) {
+  return apiRequest(`/requests${toQuery(filters)}`);
+}
+
+export async function fetchRequest(id) {
+  return apiRequest(`/requests/${id}`);
+}
+
+/** FR012: Management only. Other roles get 403. */
+export async function fetchSummary() {
+  return apiRequest("/requests/summary");
 }
 
 export { API_BASE_URL };

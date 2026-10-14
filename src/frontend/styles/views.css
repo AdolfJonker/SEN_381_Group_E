@@ -1,0 +1,216 @@
+/* Styles for the Staff and Management request views. */
+
+.view-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* Let grid children shrink so the page fits 375px without sideways scrolling (NFR005) */
+.view-stack > * {
+  min-width: 0;
+}
+
+.view-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--navy);
+}
+
+.view-sub {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.92rem;
+}
+
+.view-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.view-header-row .btn-outline,
+.filter-actions .btn-outline {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+/* Summary cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.summary-grid.secondary {
+  margin-top: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--subtle);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+button.summary-card {
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+button.summary-card:hover {
+  background: var(--subtle);
+  border-color: var(--navy);
+  box-shadow: var(--shadow);
+}
+
+button.summary-card:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+.summary-card.active {
+  border-color: var(--navy);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+
+.summary-card.tone-Overdue {
+  background: #fff4ed;
+  border-color: #f5c9a8;
+}
+
+.summary-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+}
+
+.summary-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.summary-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.summary-card.small {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+}
+
+.summary-card.small .summary-value {
+  font-size: 1.25rem;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.filters label {
+  flex: 1 1 160px;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.filters select,
+.filters input {
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.request-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.request-table th,
+.request-table td {
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.request-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.link-button {
+  background: none;
+  color: var(--navy);
+  padding: 0;
+  font-weight: 700;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  background: none;
+  color: var(--navy-hover);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-Open { background: #e7f0ff; color: #1d4f91; }
+.status-Assigned { background: #efe7ff; color: #5b3d99; }
+.status-InProgress { background: #fff1e6; color: #8a3d14; }
+.status-Resolved { background: #e3f4ea; color: #1e6b3f; }
+.status-Closed { background: #e6e8e7; color: #44504b; }
+
+.empty-state {
+  padding: 0.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-header-row {
+    flex-direction: column;
+  }
+
+  .request-table .col-category {
+    display: none;
+  }
+}
