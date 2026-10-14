@@ -1,6 +1,7 @@
 package civicconnect.services;
 
 import civicconnect.api.dto.ServiceRequestDetailDto;
+import civicconnect.observers.AuditLogObserver;
 import civicconnect.records.RequestStatus;
 import civicconnect.records.Role;
 import civicconnect.records.ServiceRequest;
@@ -63,13 +64,16 @@ class ServiceRequestLifecycleTest {
 
     @BeforeEach
     void setUp() {
+        // Real observer so history assertions still go through StatusHistoryRepository.
+        AuditLogObserver auditLogObserver = new AuditLogObserver(statusHistoryRepository);
         service = new ServiceRequestService(
                 requestRepository,
                 userRepository,
                 statusHistoryRepository,
                 commentRepository,
                 requestListService,
-                new StatusTransitionGuard()
+                new StatusTransitionGuard(),
+                auditLogObserver
         );
     }
 
