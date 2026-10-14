@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
 import MyRequests from "./views/MyRequests.jsx";
+import ManagementSummary from "./views/ManagementSummary.jsx";
+import StaffRequestList from "./views/StaffRequestList.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
+import { landingViewFor } from "./services/roleLanding.js";
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -81,18 +84,39 @@ export default function App() {
                 ) : screen === "mine" && isRequester ? (
                     <MyRequests onSubmitClick={() => setScreen("submit")} />
                 ) : (
-                    <div className="card">
-                        <h2 className="page-title">Welcome, {user.name}</h2>
-                        <p className="muted">
-                            You are signed in as <strong>{user.role}</strong>.
-                        </p>
-                        <p>
-                            This is the temporary home screen.
-                            Next we will add the real screens for your role.
-                        </p>
-                    </div>
+                    <RoleLanding user={user} />
                 )}
             </main>
         </div>
     );
+}
+
+/**
+ * Role-based landing view (NFR003). The role comes from the server (/auth/me).
+ * Hiding screens here is for usability only; the server checks every request.
+ */
+function RoleLanding({ user }) {
+    switch (landingViewFor(user.role)) {
+        case "management-summary":
+            return <ManagementSummary />;
+        case "staff-list":
+            return <StaffRequestList />;
+        case "my-requests":
+            // Requester home: welcome card. "My requests" and "Submit a request" are in the nav (Elcke's screens).
+            return (
+                <div className="card">
+                    <h2 style={{ marginTop: 0, color: "var(--navy)" }}>Welcome, {user.name}</h2>
+                    <p className="muted">
+                        You are signed in as <strong>{user.role}</strong>.
+                    </p>
+                </div>
+            );
+        default:
+            return (
+                <div className="card" role="alert">
+                    <h2 style={{ marginTop: 0, color: "var(--navy)" }}>No access</h2>
+                    <p className="muted">Your account has no CivicConnect role. Contact an administrator.</p>
+                </div>
+            );
+    }
 }
