@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for accept / status updates (optimistic locking, history, visibility).
+ * IDs use TC-A-* (Adolf). Elcke's evidence cases remain TC-E-*.
  * No Spring context and no database.
  */
 @ExtendWith(MockitoExtension.class)
@@ -72,7 +73,7 @@ class ServiceRequestLifecycleTest {
         );
     }
 
-    @DisplayName("Accept returns the flushed version that matches the stored entity")
+    @DisplayName("TC-A-01 Accept returns the flushed version that matches the stored entity")
     @Test
     void acceptReturnsFlushedVersion() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -90,7 +91,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository).saveAndFlush(request);
     }
 
-    @DisplayName("updateStatus returns the flushed version that matches the stored entity")
+    @DisplayName("TC-A-02 updateStatus returns the flushed version that matches the stored entity")
     @Test
     void updateStatusReturnsFlushedVersion() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -109,7 +110,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository).saveAndFlush(request);
     }
 
-    @DisplayName("Illegal status move returns 400 and writes zero history rows (D3)")
+    @DisplayName("TC-A-03 Illegal status move returns 400 and writes zero history rows (D3)")
     @Test
     void illegalMoveWritesZeroHistoryRows() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -129,7 +130,7 @@ class ServiceRequestLifecycleTest {
         assertEquals(0, request.getVersion());
     }
 
-    @DisplayName("Stale version returns 409 and writes nothing")
+    @DisplayName("TC-A-04 Stale version returns 409 and writes nothing")
     @Test
     void staleVersionReturnsConflict() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -147,7 +148,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository, never()).saveAndFlush(any());
     }
 
-    @DisplayName("Requester cannot accept a request")
+    @DisplayName("TC-A-05 Requester cannot accept a request")
     @Test
     void requesterCannotAccept() {
         User requester = user(7L, Role.Requester, REQUESTER_EMAIL, "Requester");
@@ -163,7 +164,7 @@ class ServiceRequestLifecycleTest {
         verify(statusHistoryRepository, never()).save(any(StatusHistory.class));
     }
 
-    @DisplayName("Staff cannot see another staff member's assigned request (404 before 403)")
+    @DisplayName("TC-A-06 Staff cannot see another staff member's assigned request (404 before 403)")
     @Test
     void staffCannotSeeAnotherStaffMembersAssignedRequest() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -182,7 +183,7 @@ class ServiceRequestLifecycleTest {
         verify(statusHistoryRepository, never()).findByRequestIdOrderByChangedAtAsc(any());
     }
 
-    @DisplayName("Accept writes exactly one history row")
+    @DisplayName("TC-A-07 Accept writes exactly one history row")
     @Test
     void acceptWritesOneHistoryRow() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
