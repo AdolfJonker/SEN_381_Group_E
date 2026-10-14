@@ -64,7 +64,13 @@ export async function createRequest({ title, description, category }) {
   });
 }
 
+/** Requester list (FR003) — GET /requests/mine */
 export async function fetchMyRequests() {
+  return apiRequest("/requests/mine");
+}
+
+/** Staff / management list — GET /requests */
+export async function fetchRequests() {
   return apiRequest("/requests");
 }
 

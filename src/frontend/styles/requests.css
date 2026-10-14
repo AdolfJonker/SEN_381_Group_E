@@ -1,0 +1,62 @@
+.request-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.request-item {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  background: #FFFFFF;
+}
+
+.request-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.request-id {
+  font-weight: 600;
+  color: #0A192F;
+}
+
+.request-title {
+  margin: 0.4rem 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.request-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  color: #64748B;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-open { background: #E2E8F0; color: #1A202C; }
+.status-assigned { background: #DBEAFE; color: #1E3A8A; }
+.status-inprogress { background: #FEF3C7; color: #92400E; }
+.status-resolved { background: #DCFCE7; color: #166534; }
+.status-closed { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
+
+.request-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

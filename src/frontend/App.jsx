@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
+import MyRequests from "./views/MyRequests.jsx";
 import StaffRequestList from "./views/StaffRequestList.jsx";
 import StaffRequestDetail from "./views/StaffRequestDetail.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
@@ -21,7 +22,7 @@ export default function App() {
     if (loading) {
         return (
             <main className="page login-page">
-                <p className="muted">Loading…</p>
+                <p className="muted">Loading...</p>
             </main>
         );
     }
@@ -34,8 +35,15 @@ export default function App() {
     const isRequester = role === "requester";
     const isStaff = role === "staff";
     const screens = [
-        ...(isStaff ? [{ id: "requests", label: "Requests" }] : [{ id: "home", label: "Home" }]),
-        ...(isRequester ? [{ id: "submit", label: "Submit a request" }] : []),
+        ...(isStaff
+            ? [{ id: "requests", label: "Requests" }]
+            : [{ id: "home", label: "Home" }]),
+        ...(isRequester
+            ? [
+                  { id: "submit", label: "Submit a request" },
+                  { id: "mine", label: "My requests" },
+              ]
+            : []),
     ];
 
     // ----- Logged-in App Shell -----
@@ -72,7 +80,9 @@ export default function App() {
                         type="button"
                         className="nav-link"
                         aria-current={
-                            (isStaff ? s.id === "requests" : screen === s.id) ? "page" : undefined
+                            (isStaff ? s.id === "requests" : screen === s.id)
+                                ? "page"
+                                : undefined
                         }
                         onClick={() => {
                             setSelectedRequestId(null);
@@ -105,8 +115,9 @@ export default function App() {
                 )}
                 {!isStaff && screen === "submit" && isRequester ? (
                     <SubmitRequest />
-                ) : null}
-                {!isStaff && screen !== "submit" && (
+                ) : !isStaff && screen === "mine" && isRequester ? (
+                    <MyRequests onSubmitClick={() => setScreen("submit")} />
+                ) : !isStaff ? (
                     <div className="card">
                         <h2 className="page-title">Welcome, {user.name}</h2>
                         <p className="muted">
@@ -117,7 +128,7 @@ export default function App() {
                             Next we will add the real screens for your role.
                         </p>
                     </div>
-                )}
+                ) : null}
             </main>
         </div>
     );

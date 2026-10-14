@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchMyRequests } from "../services/client.js";
+import { fetchRequests } from "../services/client.js";
 import { formatStatus, formatWhen, STATUS_OPTIONS } from "../services/format.js";
 import { REQUEST_CATEGORIES } from "../services/validation.js";
 
@@ -16,7 +16,7 @@ export default function StaffRequestList({ onOpen }) {
         let active = true;
         setLoading(true);
         setLoadError("");
-        fetchMyRequests()
+        fetchRequests()
             .then((data) => {
                 if (active) {
                     setRequests(Array.isArray(data) ? data : []);
