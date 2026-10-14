@@ -1,4 +1,6 @@
 
+# Dependency scanning: npm audit (below) and Dependabot alerts (repo settings).
+# GitHub's dependency-review action needs paid Advanced Security on a private repo.
 name: CI
 
 on:
@@ -64,6 +66,10 @@ jobs:
   secrets-scan:
     name: Secrets scan
     runs-on: ubuntu-latest
+    # On a private repo gitleaks needs to read the PR's commit list.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,20 +77,3 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  dependency-review:
-    name: Dependency review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-
-    continue-on-error: true
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-          comment-summary-in-pr: on-failure
