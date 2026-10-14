@@ -8,12 +8,12 @@ import civicconnect.api.dto.ServiceRequestDetailDto;
 import civicconnect.api.dto.ServiceRequestResponse;
 import civicconnect.api.dto.ServiceRequestSummaryDto;
 import civicconnect.api.dto.StatusHistoryDto;
+import civicconnect.observers.AuditLogObserver;
 import civicconnect.records.Comment;
 import civicconnect.records.RequestCategory;
 import civicconnect.records.RequestStatus;
 import civicconnect.records.Role;
 import civicconnect.records.ServiceRequest;
-import civicconnect.records.StatusHistory;
 import civicconnect.records.User;
 import civicconnect.repositories.CommentRepository;
 import civicconnect.repositories.ServiceRequestRepository;
@@ -37,6 +37,7 @@ public class ServiceRequestService {
     private final CommentRepository commentRepository;
     private final RequestListService requestListService;
     private final StatusTransitionGuard statusTransitionGuard;
+    private final AuditLogObserver auditLogObserver;
 
     public ServiceRequestService(
             ServiceRequestRepository requestRepository,
@@ -44,7 +45,8 @@ public class ServiceRequestService {
             StatusHistoryRepository statusHistoryRepository,
             CommentRepository commentRepository,
             RequestListService requestListService,
-            StatusTransitionGuard statusTransitionGuard
+            StatusTransitionGuard statusTransitionGuard,
+            AuditLogObserver auditLogObserver
     ) {
         this.requestRepository = requestRepository;
         this.userRepository = userRepository;
@@ -52,6 +54,7 @@ public class ServiceRequestService {
         this.commentRepository = commentRepository;
         this.requestListService = requestListService;
         this.statusTransitionGuard = statusTransitionGuard;
+        this.auditLogObserver = auditLogObserver;
     }
 
     @Transactional
@@ -126,8 +129,8 @@ public class ServiceRequestService {
         request.setAssignedTo(user);
         request.setStatus(RequestStatus.Assigned);
         request.setUpdatedAt(Instant.now());
-        requestRepository.save(request);
-        writeHistory(request, from, RequestStatus.Assigned, user);
+        requestRepository.saveAndFlush(request);
+        auditLogObserver.record(request, from, RequestStatus.Assigned, user, null);
         return toDetail(request);
     }
 
@@ -164,8 +167,8 @@ public class ServiceRequestService {
 
         request.setStatus(toStatus);
         request.setUpdatedAt(Instant.now());
-        requestRepository.save(request);
-        writeHistory(request, from, toStatus, user);
+        requestRepository.saveAndFlush(request);
+        auditLogObserver.record(request, from, toStatus, user, null);
         return toDetail(request);
     }
 
@@ -208,16 +211,6 @@ public class ServiceRequestService {
                     "This request was updated by someone else. Reload and try again."
             );
         }
-    }
-
-    private void writeHistory(ServiceRequest request, RequestStatus from, RequestStatus to, User user) {
-        StatusHistory history = new StatusHistory();
-        history.setRequest(request);
-        history.setFromStatus(from);
-        history.setToStatus(to);
-        history.setChangedBy(user);
-        history.setChangedAt(Instant.now());
-        statusHistoryRepository.save(history);
     }
 
     private String illegalTransitionMessage(RequestStatus from, RequestStatus to) {
