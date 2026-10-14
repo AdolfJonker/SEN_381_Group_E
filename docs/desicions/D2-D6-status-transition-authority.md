@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date agreed | 12/10/2026 |
-| Last updated | 13/10/2026 |
+| Last updated | 14/10/2026 |
 | Status | D2 to D6 agreed. The clarifications in section 2 are proposed and awaiting team confirmation |
 | Related requirements | FR008, FR009, FR011, NFR004 |
 | Related ADRs | ADR-DESIGN-001 |
@@ -58,6 +58,7 @@ These points were found when D2 to D6 were checked against the requirements and 
 * Reassignment by Management changes the assignee only. The status does not change, so no StatusHistory row is written and the request version increases by one. This is recorded in the Technical Debt Register, because reassignment is then not part of the audit trail.
 * Staff may assign a request only to themselves. Management may assign a request to any Staff member. A request is never assigned to a Requester.
 * A legal transition attempted by a user who is not permitted returns HTTP 403 Forbidden. A user who is not signed in receives HTTP 401 Unauthorized. Permission is checked before legality. In every case zero StatusHistory rows are written and the status and version are unchanged.
+  * Implementation note (C4 / issue #70): staff visibility is enforced first via `requireVisible`, which returns HTTP 404 for requests another staff member already owns. Non-assigned staff therefore never reach the transition guard, so the staff-specific 403 ("Only the staff member assigned to this request…") is unreachable through the API for that case. The 403 still applies for roles that can see the request but are not allowed to change it (for example a Requester).
 
 ## 3. Consequences
 
