@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
+import MyRequests from "./views/MyRequests.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
     if (loading) {
         return (
             <main className="page login-page">
-                <p className="muted">Loading…</p>
+                <p className="muted">Loading...</p>
             </main>
         );
     }
@@ -30,7 +31,12 @@ export default function App() {
     const isRequester = user.role?.toLowerCase() === "requester";
     const screens = [
         { id: "home", label: "Home" },
-        ...(isRequester ? [{ id: "submit", label: "Submit a request" }] : []),
+        ...(isRequester
+            ? [
+                  { id: "submit", label: "Submit a request" },
+                  { id: "mine", label: "My requests" },
+              ]
+            : []),
     ];
 
     // ----- Logged-in App Shell -----
@@ -72,6 +78,8 @@ export default function App() {
             <main className="app-main">
                 {screen === "submit" && isRequester ? (
                     <SubmitRequest />
+                ) : screen === "mine" && isRequester ? (
+                    <MyRequests onSubmitClick={() => setScreen("submit")} />
                 ) : (
                     <div className="card">
                         <h2 className="page-title">Welcome, {user.name}</h2>

@@ -65,7 +65,7 @@ export async function createRequest({ title, description, category }) {
 }
 
 export async function fetchMyRequests() {
-  return apiRequest("/requests");
+  return apiRequest("/requests/mine");
 }
 
 export { API_BASE_URL };
