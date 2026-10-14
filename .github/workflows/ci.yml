@@ -1,0 +1,92 @@
+# CivicConnect CI (PED v3.0, M3 Section 5)
+# Runs on every pull request to main and every push to main.
+# Required checks in branch protection: "Backend build + tests", "Frontend tests + build", "Secrets scan".
+# Dependency review and npm audit report but do not block yet (warn first, block later — A2 Task 4).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend build + tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      # mvnw may lose its executable bit when committed from Windows.
+      - run: chmod +x mvnw
+      # Compiles, runs all JUnit tests (unit, decision table, MockMvc API tests) and Checkstyle.
+      # Tests use the "demo" profile (in-memory H2), so no database secrets are needed.
+      - name: Build, test and Checkstyle
+        run: ./mvnw -B verify
+      - name: Upload test and Checkstyle reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            src/backend/target/surefire-reports/
+            src/backend/target/checkstyle-result.xml
+
+  frontend:
+    name: Frontend tests + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: npm audit (known vulnerable packages, report only)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  secrets-scan:
+    name: Secrets scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Fails the job if a password, key or token is found in the commits.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      # Flags new dependencies with known High/Critical vulnerabilities (Maven and npm).
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
