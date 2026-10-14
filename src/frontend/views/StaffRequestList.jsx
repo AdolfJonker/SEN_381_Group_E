@@ -1,184 +1,111 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchRequests } from "../services/client.js";
-import { formatStatus, formatWhen, STATUS_OPTIONS } from "../services/format.js";
-import { REQUEST_CATEGORIES } from "../services/validation.js";
+import { CATEGORIES, STATUSES, STATUS_LABELS } from "../services/requestOptions.js";
+import { applyFilters, sortByDate } from "../services/requestFilters.js";
+import RequestTable from "./RequestTable.jsx";
+import "../styles/views.css";
 
-export default function StaffRequestList({ onOpen }) {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState("");
-    const [search, setSearch] = useState("");
-    const [status, setStatus] = useState("");
-    const [category, setCategory] = useState("");
-    const [sort, setSort] = useState("newest");
+/**
+ * Staff landing view (FR005, FR006).
+ * The server returns only the staff member's scope: their assigned work plus Open requests.
+ * Staff can search by ID or title, filter by status and category, and sort by date.
+ */
+export default function StaffRequestList({ onSelect }) {
+  const [requests, setRequests] = useState([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [category, setCategory] = useState("");
+  const [sortDir, setSortDir] = useState("desc");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
-    useEffect(() => {
-        let active = true;
-        setLoading(true);
-        setLoadError("");
-        fetchRequests()
-            .then((data) => {
-                if (active) {
-                    setRequests(Array.isArray(data) ? data : []);
-                }
-            })
-            .catch((error) => {
-                if (active) {
-                    setLoadError(error.message || "Could not load requests.");
-                }
-            })
-            .finally(() => {
-                if (active) {
-                    setLoading(false);
-                }
-            });
-        return () => {
-            active = false;
-        };
-    }, []);
+  useEffect(() => {
+    let ignore = false;
+    fetchRequests({ status, category })
+      .then((data) => {
+        if (!ignore) setRequests(data);
+      })
+      .catch((err) => {
+        if (!ignore) setError(err.message);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [status, category, reloadKey]);
 
-    const visible = useMemo(() => {
-        const query = search.trim().toLowerCase();
-        const filtered = requests.filter((request) => {
-            if (status && request.status !== status) {
-                return false;
-            }
-            if (category && request.category !== category) {
-                return false;
-            }
-            if (!query) {
-                return true;
-            }
-            const haystack = [
-                request.id,
-                request.title,
-                request.category,
-                request.assignedToName,
-                formatStatus(request.status),
-            ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase();
-            return haystack.includes(query);
-        });
+  const visible = useMemo(
+    () => sortByDate(applyFilters(requests, { status, category, search }), sortDir),
+    [requests, status, category, search, sortDir]
+  );
 
-        filtered.sort((left, right) => {
-            const leftTime = new Date(left.createdAt).getTime();
-            const rightTime = new Date(right.createdAt).getTime();
-            return sort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
-        });
-        return filtered;
-    }, [requests, search, status, category, sort]);
-
-    return (
-        <div className="card">
-            <h2 className="page-title">Service requests</h2>
-            <p className="muted">
-                Open requests you can accept, and requests already assigned to you.
-            </p>
-
-            {loadError && (
-                <div className="alert alert-error" role="alert">
-                    {loadError}
-                </div>
-            )}
-
-            <div className="filter-grid">
-                <div className="field">
-                    <label htmlFor="request-search">Search</label>
-                    <input
-                        id="request-search"
-                        type="search"
-                        value={search}
-                        placeholder="Title, category or request number"
-                        onChange={(event) => setSearch(event.target.value)}
-                    />
-                </div>
-                <div className="field">
-                    <label htmlFor="status-filter">Status</label>
-                    <select
-                        id="status-filter"
-                        value={status}
-                        onChange={(event) => setStatus(event.target.value)}
-                    >
-                        <option value="">All statuses</option>
-                        {STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="field">
-                    <label htmlFor="category-filter">Category</label>
-                    <select
-                        id="category-filter"
-                        value={category}
-                        onChange={(event) => setCategory(event.target.value)}
-                    >
-                        <option value="">All categories</option>
-                        {REQUEST_CATEGORIES.map((item) => (
-                            <option key={item} value={item}>
-                                {item}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="field">
-                    <label htmlFor="date-sort">Sort by date</label>
-                    <select
-                        id="date-sort"
-                        value={sort}
-                        onChange={(event) => setSort(event.target.value)}
-                    >
-                        <option value="newest">Newest first</option>
-                        <option value="oldest">Oldest first</option>
-                    </select>
-                </div>
-            </div>
-
-            {loading ? (
-                <p className="muted">Loading requests…</p>
-            ) : (
-                <>
-                    <p className="muted result-count">
-                        {visible.length} {visible.length === 1 ? "request" : "requests"}
-                    </p>
-                    {visible.length === 0 ? (
-                        <p>
-                            {requests.length === 0
-                                ? "No requests are waiting. New requests appear here when a requester submits one."
-                                : "No requests match these filters."}
-                        </p>
-                    ) : (
-                        <div className="request-list">
-                            {visible.map((request) => (
-                                <button
-                                    key={request.id}
-                                    type="button"
-                                    className="request-row"
-                                    onClick={() => onOpen?.(request.id)}
-                                >
-                                    <span className="request-row-top">
-                                        <span className="request-id">#{request.id}</span>
-                                        <span className={`status-pill status-${String(request.status || "").toLowerCase()}`}>
-                                            {formatStatus(request.status)}
-                                        </span>
-                                    </span>
-                                    <span className="request-title">{request.title}</span>
-                                    <span className="muted">
-                                        {request.category}
-                                        {" · "}
-                                        {formatWhen(request.createdAt)}
-                                        {" · "}
-                                        {request.assignedToName || "Unassigned"}
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </>
-            )}
+  return (
+    <section className="card" aria-labelledby="staff-heading">
+      <div className="view-header-row">
+        <div>
+          <h2 id="staff-heading" className="view-title">Service requests</h2>
+          <p className="muted view-sub">Your assigned work and Open requests waiting to be accepted.</p>
         </div>
-    );
+        <button type="button" className="btn-outline" onClick={() => setReloadKey((k) => k + 1)}>
+          Refresh
+        </button>
+      </div>
+
+      {error ? (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="filters">
+        <label>
+          Search
+          <input
+            type="search"
+            placeholder="ID or title"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+        <label>
+          Status
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">All statuses</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Category
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">All categories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Sort by date
+          <select value={sortDir} onChange={(e) => setSortDir(e.target.value)}>
+            <option value="desc">Newest first</option>
+            <option value="asc">Oldest first</option>
+          </select>
+        </label>
+      </div>
+
+      {loading ? (
+        <p className="muted">Loading requests…</p>
+      ) : (
+        <RequestTable requests={visible} onSelect={onSelect} />
+      )}
+    </section>
+  );
 }

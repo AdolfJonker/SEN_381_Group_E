@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
 import MyRequests from "./views/MyRequests.jsx";
+import ManagementSummary from "./views/ManagementSummary.jsx";
 import StaffRequestList from "./views/StaffRequestList.jsx";
-import StaffRequestDetail from "./views/StaffRequestDetail.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
+import { landingViewFor } from "./services/roleLanding.js";
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [screen, setScreen] = useState("home");
-    const [selectedRequestId, setSelectedRequestId] = useState(null);
 
     useEffect(() => {
         fetchCurrentUser()
@@ -31,13 +31,9 @@ export default function App() {
         return <LoginScreen onLogin={setUser} />;
     }
 
-    const role = user.role?.toLowerCase();
-    const isRequester = role === "requester";
-    const isStaff = role === "staff";
+    const isRequester = user.role?.toLowerCase() === "requester";
     const screens = [
-        ...(isStaff
-            ? [{ id: "requests", label: "Requests" }]
-            : [{ id: "home", label: "Home" }]),
+        { id: "home", label: "Home" },
         ...(isRequester
             ? [
                   { id: "submit", label: "Submit a request" },
@@ -64,7 +60,6 @@ export default function App() {
                                 // The session may already have ended.
                             }
                             setUser(null);
-                            setSelectedRequestId(null);
                             setScreen("home");
                         }}
                     >
@@ -79,15 +74,8 @@ export default function App() {
                         key={s.id}
                         type="button"
                         className="nav-link"
-                        aria-current={
-                            (isStaff ? s.id === "requests" : screen === s.id)
-                                ? "page"
-                                : undefined
-                        }
-                        onClick={() => {
-                            setSelectedRequestId(null);
-                            setScreen(s.id);
-                        }}
+                        aria-current={screen === s.id ? "page" : undefined}
+                        onClick={() => setScreen(s.id)}
                     >
                         {s.label}
                     </button>
@@ -95,41 +83,44 @@ export default function App() {
             </nav>
 
             <main className="app-main">
-                {isStaff && screen === "request" && (
-                    <StaffRequestDetail
-                        requestId={selectedRequestId}
-                        currentUserId={user.id}
-                        onBack={() => {
-                            setSelectedRequestId(null);
-                            setScreen("requests");
-                        }}
-                    />
-                )}
-                {isStaff && screen !== "request" && (
-                    <StaffRequestList
-                        onOpen={(id) => {
-                            setSelectedRequestId(id);
-                            setScreen("request");
-                        }}
-                    />
-                )}
-                {!isStaff && screen === "submit" && isRequester ? (
+                {screen === "submit" && isRequester ? (
                     <SubmitRequest />
-                ) : !isStaff && screen === "mine" && isRequester ? (
+                ) : screen === "mine" && isRequester ? (
                     <MyRequests onSubmitClick={() => setScreen("submit")} />
-                ) : !isStaff ? (
-                    <div className="card">
-                        <h2 className="page-title">Welcome, {user.name}</h2>
-                        <p className="muted">
-                            You are signed in as <strong>{user.role}</strong>.
-                        </p>
-                        <p>
-                            This is the temporary home screen.
-                            Next we will add the real screens for your role.
-                        </p>
-                    </div>
-                ) : null}
+                ) : (
+                    <RoleLanding user={user} />
+                )}
             </main>
         </div>
     );
+}
+
+/**
+ * Role-based landing view (NFR003). The role comes from the server (/auth/me).
+ * Hiding screens here is for usability only; the server checks every request.
+ */
+function RoleLanding({ user }) {
+    switch (landingViewFor(user.role)) {
+        case "management-summary":
+            return <ManagementSummary />;
+        case "staff-list":
+            return <StaffRequestList />;
+        case "my-requests":
+            // Requester home: welcome card. "My requests" and "Submit a request" are in the nav (Elcke's screens).
+            return (
+                <div className="card">
+                    <h2 style={{ marginTop: 0, color: "var(--navy)" }}>Welcome, {user.name}</h2>
+                    <p className="muted">
+                        You are signed in as <strong>{user.role}</strong>.
+                    </p>
+                </div>
+            );
+        default:
+            return (
+                <div className="card" role="alert">
+                    <h2 style={{ marginTop: 0, color: "var(--navy)" }}>No access</h2>
+                    <p className="muted">Your account has no CivicConnect role. Contact an administrator.</p>
+                </div>
+            );
+    }
 }

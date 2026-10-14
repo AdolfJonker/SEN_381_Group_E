@@ -32,6 +32,8 @@ spring:
     enabled: true
     # Shared schema + PostgreSQL-only NFR004 append-only triggers (V2)
     locations: classpath:db/migration,classpath:db/migration-postgres
+    # A database whose tables were created before Flyway ran is treated as already at V1.
+    baseline-on-migrate: true
 
 ---
 # In-memory H2 for quick local runs without PostgreSQL

@@ -210,7 +210,9 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
                             {request.history.map((entry) => (
                                 <li key={entry.id}>
                                     <strong>
-                                        {formatStatus(entry.fromStatus)} → {formatStatus(entry.toStatus)}
+                                        {entry.fromStatus
+                                            ? `${formatStatus(entry.fromStatus)} → ${formatStatus(entry.toStatus)}`
+                                            : "Submitted"}
                                     </strong>
                                     <div className="muted">
                                         {entry.changedByName}
@@ -251,7 +253,7 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
                                 name="comment"
                                 rows={4}
                                 value={comment}
-                                maxLength={COMMENT_MAX + 50}
+                                maxLength={COMMENT_MAX}
                                 onChange={(event) => setComment(event.target.value)}
                                 disabled={Boolean(working)}
                                 aria-invalid={Boolean(commentError)}
