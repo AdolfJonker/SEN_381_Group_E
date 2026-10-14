@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LoginScreen from "./views/LoginScreen.jsx";
 import SubmitRequest from "./views/SubmitRequest.jsx";
+import MyRequests from "./views/MyRequests.jsx";
 import ManagementSummary from "./views/ManagementSummary.jsx";
 import StaffRequestList from "./views/StaffRequestList.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
@@ -21,7 +22,7 @@ export default function App() {
     if (loading) {
         return (
             <main className="page login-page">
-                <p className="muted">Loading…</p>
+                <p className="muted">Loading...</p>
             </main>
         );
     }
@@ -33,7 +34,12 @@ export default function App() {
     const isRequester = user.role?.toLowerCase() === "requester";
     const screens = [
         { id: "home", label: "Home" },
-        ...(isRequester ? [{ id: "submit", label: "Submit a request" }] : []),
+        ...(isRequester
+            ? [
+                  { id: "submit", label: "Submit a request" },
+                  { id: "mine", label: "My requests" },
+              ]
+            : []),
     ];
 
     // ----- Logged-in App Shell -----
@@ -75,6 +81,8 @@ export default function App() {
             <main className="app-main">
                 {screen === "submit" && isRequester ? (
                     <SubmitRequest />
+                ) : screen === "mine" && isRequester ? (
+                    <MyRequests onSubmitClick={() => setScreen("submit")} />
                 ) : (
                     <RoleLanding user={user} />
                 )}
@@ -94,7 +102,7 @@ function RoleLanding({ user }) {
         case "staff-list":
             return <StaffRequestList />;
         case "my-requests":
-            // The MyRequests view belongs to the requester slice. Keep the welcome card until it is built.
+            // Requester home: welcome card. "My requests" and "Submit a request" are in the nav (Elcke's screens).
             return (
                 <div className="card">
                     <h2 style={{ marginTop: 0, color: "var(--navy)" }}>Welcome, {user.name}</h2>

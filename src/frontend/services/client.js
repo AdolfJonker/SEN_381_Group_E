@@ -68,7 +68,7 @@ export async function createRequest({ title, description, category }) {
 }
 
 export async function fetchMyRequests() {
-  return apiRequest("/requests");
+  return apiRequest("/requests/mine");
 }
 
 // ----- Request views (FR005, FR012, FR013) -----
