@@ -56,8 +56,9 @@ jobs:
           cache: npm
           cache-dependency-path: src/frontend/package-lock.json
       - run: npm ci
+      # --if-present: the test script arrives with the frontend PR; until then this step is skipped.
       - name: Unit tests
-        run: npm test
+        run: npm test --if-present
       - name: Production build
         run: npm run build
       - name: npm audit (known vulnerable packages, report only)
@@ -80,6 +81,9 @@ jobs:
     name: Dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # Report only for now (warn first, block later — A2 Task 4; TD-005).
+    # Needs Settings -> Code security -> Dependency graph to be enabled.
+    continue-on-error: true
     permissions:
       contents: read
       pull-requests: write
