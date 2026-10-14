@@ -30,7 +30,8 @@ spring:
           time_zone: UTC
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    # Shared schema + PostgreSQL-only NFR004 append-only triggers (V2)
+    locations: classpath:db/migration,classpath:db/migration-postgres
 
 ---
 # In-memory H2 for quick local runs without PostgreSQL
@@ -49,6 +50,7 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+    # H2 cannot run PostgreSQL trigger functions; shared V1 only (see TD-006)
     locations: classpath:db/migration
   h2:
     console:
