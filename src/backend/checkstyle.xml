@@ -2,13 +2,7 @@
 <!DOCTYPE module PUBLIC
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
-<!--
-  CivicConnect Checkstyle rules (PED v3.0 Section 5).
-  A small set of rules that catch real defects or poor practice.
-  Formatting rules (tabs, line length) are left out on purpose,
-  so the report is not flooded with style noise.
-  Severity "warning": reported in CI but does not block (warn first, block later — A2 Task 4).
--->
+
 <module name="Checker">
     <property name="severity" value="warning"/>
     <property name="fileExtensions" value="java"/>

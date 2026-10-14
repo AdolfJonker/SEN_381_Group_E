@@ -1,7 +1,4 @@
-# CivicConnect CI (PED v3.0, M3 Section 5)
-# Runs on every pull request to main and every push to main.
-# Required checks in branch protection: "Backend build + tests", "Frontend tests + build", "Secrets scan".
-# Dependency review and npm audit report but do not block yet (warn first, block later — A2 Task 4).
+
 name: CI
 
 on:
@@ -27,10 +24,9 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-      # mvnw may lose its executable bit when committed from Windows.
+
       - run: chmod +x mvnw
-      # Compiles, runs all JUnit tests (unit, decision table, MockMvc API tests) and Checkstyle.
-      # Tests use the "demo" profile (in-memory H2), so no database secrets are needed.
+
       - name: Build, test and Checkstyle
         run: ./mvnw -B verify
       - name: Upload test and Checkstyle reports
@@ -56,7 +52,7 @@ jobs:
           cache: npm
           cache-dependency-path: src/frontend/package-lock.json
       - run: npm ci
-      # --if-present: the test script arrives with the frontend PR; until then this step is skipped.
+
       - name: Unit tests
         run: npm test --if-present
       - name: Production build
@@ -72,7 +68,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Fails the job if a password, key or token is found in the commits.
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,15 +76,14 @@ jobs:
     name: Dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    # Report only for now (warn first, block later — A2 Task 4; TD-005).
-    # Needs Settings -> Code security -> Dependency graph to be enabled.
+
     continue-on-error: true
     permissions:
       contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      # Flags new dependencies with known High/Critical vulnerabilities (Maven and npm).
+
       - uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
