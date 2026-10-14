@@ -17,8 +17,8 @@ CREATE TABLE service_requests (
     status            VARCHAR(32)  NOT NULL,
     submitted_by_id   BIGINT NOT NULL REFERENCES users (id),
     assigned_to_id    BIGINT NULL REFERENCES users (id),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     version           INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT chk_request_status CHECK (
         status IN ('Open', 'Assigned', 'InProgress', 'Resolved', 'Closed')
@@ -47,7 +47,7 @@ CREATE TABLE status_history (
     from_status     VARCHAR(32) NOT NULL,
     to_status       VARCHAR(32) NOT NULL,
     changed_by_id   BIGINT NOT NULL REFERENCES users (id),
-    "timestamp"      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "timestamp"      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     note            TEXT NULL
 );
 
@@ -58,7 +58,7 @@ CREATE TABLE comments (
     request_id      BIGINT NOT NULL REFERENCES service_requests (id),
     author_id       BIGINT NOT NULL REFERENCES users (id),
     content         TEXT NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_comments_request ON comments (request_id);
