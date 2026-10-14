@@ -1,0 +1,48 @@
+package civicconnect.api;
+
+import civicconnect.api.dto.RequestResponse;
+import civicconnect.api.dto.SummaryResponse;
+import civicconnect.services.RequestListService;
+import civicconnect.services.RequestSummaryService;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+/**
+ * Read-only request views (FR005, FR012, NFR003).
+ * Role rules for these routes are in SecurityConfig.
+ */
+@RestController
+@RequestMapping("/api/v1/requests")
+public class RequestViewController {
+
+    private final RequestListService listService;
+    private final RequestSummaryService summaryService;
+
+    public RequestViewController(RequestListService listService, RequestSummaryService summaryService) {
+        this.listService = listService;
+        this.summaryService = summaryService;
+    }
+
+    /** FR005: the list for the logged-in role. */
+    @GetMapping
+    public List<RequestResponse> list(Authentication authentication) {
+        return listService.listFor(authentication.getName());
+    }
+
+    /** FR012: Management summary counts. */
+    @GetMapping("/summary")
+    public SummaryResponse summary() {
+        return summaryService.summary();
+    }
+
+    /** One request, only if the role's strategy allows it (NFR003, ASR-01). */
+    @GetMapping("/{id:\\d+}")
+    public RequestResponse get(@PathVariable Long id, Authentication authentication) {
+        return listService.getFor(authentication.getName(), id);
+    }
+}

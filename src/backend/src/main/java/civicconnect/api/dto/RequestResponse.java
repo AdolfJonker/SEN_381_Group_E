@@ -14,7 +14,8 @@ public record RequestResponse(
         Long submittedById,
         Instant createdAt,
         Instant updatedAt,
-        Integer version
+        Integer version,
+        Long assignedToId
 ) {
     public static RequestResponse from(ServiceRequest request) {
         return new RequestResponse(
@@ -26,7 +27,8 @@ public record RequestResponse(
                 request.getSubmittedBy().getId(),
                 request.getCreatedAt(),
                 request.getUpdatedAt(),
-                request.getVersion()
+                request.getVersion(),
+                request.getAssignedTo() == null ? null : request.getAssignedTo().getId()
         );
     }
 }

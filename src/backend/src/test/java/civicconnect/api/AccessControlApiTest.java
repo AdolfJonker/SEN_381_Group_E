@@ -1,0 +1,173 @@
+package civicconnect.api;
+
+import civicconnect.records.RequestStatus;
+import civicconnect.records.Role;
+import civicconnect.records.ServiceRequest;
+import civicconnect.records.User;
+import civicconnect.repositories.ServiceRequestRepository;
+import civicconnect.repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * API tests (NFR003, ASR-01, FR005, FR012, RISK-003, RISK-004).
+ * Runs DemoUserLoader creates the three demo users, doesnt affect any history or data.
+ * Each test runs in a transaction that is rolled back, so tests do not affect each other.
+ */
+@SpringBootTest
+@ActiveProfiles("demo")
+@AutoConfigureMockMvc
+@Transactional
+class AccessControlApiTest {
+
+    private static final String REQUESTER = "requester@civicconnect.local";
+    private static final String STAFF = "staff@civicconnect.local";
+    private static final String MANAGEMENT = "management@civicconnect.local";
+    private static final String OTHER_REQUESTER = "other.requester@civicconnect.local";
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private UserRepository users;
+
+    @Autowired
+    private ServiceRequestRepository requests;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private ServiceRequest requesterOwn;
+    private ServiceRequest otherRequesterOwn;
+
+    @BeforeEach
+    void seed() {
+        User requester = users.findByEmail(REQUESTER).orElseThrow();
+        User other = new User();
+        other.setEmail(OTHER_REQUESTER);
+        other.setName("Other Requester");
+        other.setRole(Role.Requester);
+        other.setPasswordHash(passwordEncoder.encode("test-only-password"));
+        users.save(other);
+
+        requesterOwn = requests.save(newRequest("Leak in Block A", "Facility Fault", RequestStatus.Open, requester, 1));
+        otherRequesterOwn = requests.save(newRequest("Lost laptop charger", "Lost Property", RequestStatus.Open, other, 10));
+        requests.save(newRequest("Broken window", "Maintenance", RequestStatus.Closed, other, 20));
+    }
+
+    private static ServiceRequest newRequest(String title, String category, RequestStatus status, User by, int daysOld) {
+        ServiceRequest request = new ServiceRequest();
+        request.setTitle(title);
+        request.setDescription("Test data for access-control tests.");
+        request.setCategory(category);
+        request.setStatus(status);
+        request.setSubmittedBy(by);
+        request.setCreatedAt(Instant.now().minus(daysOld, ChronoUnit.DAYS));
+        return request;
+    }
+
+    // ---------- TC-API-SEC-01: not signed in -> 401 ----------
+
+    @Test
+    @DisplayName("TC-API-SEC-01a no session on a data route returns 401")
+    void unauthenticatedListIsRejected() throws Exception {
+        mvc.perform(get("/api/v1/requests")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/requests/summary")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("TC-API-SEC-01b wrong password returns 401 with a generic message")
+    void wrongPasswordIsRejected() throws Exception {
+        mvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + MANAGEMENT + "\",\"password\":\"wrong-password\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+
+    // ---------- TC-API-SEC-02: wrong role -> 403 ----------
+
+    @Test
+    @DisplayName("TC-API-SEC-02a Requester and Staff cannot read the Management summary (403)")
+    void nonManagementCannotReadSummary() throws Exception {
+        mvc.perform(get("/api/v1/requests/summary").with(user(REQUESTER).roles("Requester")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/requests/summary").with(user(STAFF).roles("Staff")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("TC-API-SEC-02b Management reads the summary with the FR012 counts (200)")
+    void managementReadsSummary() throws Exception {
+        mvc.perform(get("/api/v1/requests/summary").with(user(MANAGEMENT).roles("Management")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(2))
+                .andExpect(jsonPath("$.closed").value(1))
+                .andExpect(jsonPath("$.resolved").value(0))
+                // Open and 10 days old -> overdue. Closed 20 days old -> not overdue.
+                .andExpect(jsonPath("$.overdue").value(1));
+    }
+
+    @Test
+    @DisplayName("TC-API-SEC-02c Staff cannot submit a request (403)")
+    void staffCannotSubmit() throws Exception {
+        mvc.perform(post("/api/v1/requests").with(user(STAFF).roles("Staff"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"x\",\"description\":\"y\",\"category\":\"Other\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    // ---------- TC-API-SEC-03 (ASR-01): a requester cannot get another requester's data ----------
+
+    @Test
+    @DisplayName("TC-API-SEC-03a Requester opening another requester's request by id returns 403")
+    void requesterCannotOpenOthersRequest() throws Exception {
+        mvc.perform(get("/api/v1/requests/" + otherRequesterOwn.getId()).with(user(REQUESTER).roles("Requester")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/requests/" + requesterOwn.getId()).with(user(REQUESTER).roles("Requester")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("TC-API-SEC-03b Requester list holds only the requester's own requests")
+    void requesterListIsScoped() throws Exception {
+        Long requesterId = users.findByEmail(REQUESTER).orElseThrow().getId();
+        mvc.perform(get("/api/v1/requests").with(user(REQUESTER).roles("Requester")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].submittedById", everyItem(is(requesterId.intValue()))))
+                .andExpect(jsonPath("$[*].id", not(hasItem(otherRequesterOwn.getId().intValue()))));
+    }
+
+    // ---------- FR005: staff scope through the API ----------
+
+    @Test
+    @DisplayName("TC-API-SEC-04 Staff list holds Open requests and own assigned work, not closed work of others")
+    void staffListIsScoped() throws Exception {
+        mvc.perform(get("/api/v1/requests").with(user(STAFF).roles("Staff")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].status", everyItem(is("Open"))))
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+}
