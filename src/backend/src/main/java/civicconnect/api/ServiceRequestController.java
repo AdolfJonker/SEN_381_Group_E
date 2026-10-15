@@ -5,22 +5,22 @@ import civicconnect.api.dto.CreateCommentBody;
 import civicconnect.api.dto.CreateRequestBody;
 import civicconnect.api.dto.RequestResponse;
 import civicconnect.api.dto.ServiceRequestDetailDto;
-import civicconnect.api.dto.ServiceRequestSummaryDto;
 import civicconnect.api.dto.UpdateStatusBody;
 import civicconnect.services.ServiceRequestService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
+/**
+ * Write paths for service requests (create, accept, status, comments).
+ * GET list / detail / summary live in {@link RequestViewController} (access-control slice).
+ */
 @RestController
 @RequestMapping("/api/v1/requests")
 public class ServiceRequestController {
@@ -38,16 +38,6 @@ public class ServiceRequestController {
     ) {
         RequestResponse created = requestService.create(authentication.getName(), body);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @GetMapping
-    public List<ServiceRequestSummaryDto> list(Authentication authentication) {
-        return requestService.listFor(authentication.getName());
-    }
-
-    @GetMapping("/{id}")
-    public ServiceRequestDetailDto get(@PathVariable Long id, Authentication authentication) {
-        return requestService.get(authentication.getName(), id);
     }
 
     @PostMapping("/{id}/accept")

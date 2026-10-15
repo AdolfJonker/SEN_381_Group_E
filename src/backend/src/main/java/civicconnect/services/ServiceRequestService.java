@@ -6,7 +6,6 @@ import civicconnect.api.dto.CreateRequestBody;
 import civicconnect.api.dto.RequestResponse;
 import civicconnect.api.dto.ServiceRequestDetailDto;
 import civicconnect.api.dto.ServiceRequestResponse;
-import civicconnect.api.dto.ServiceRequestSummaryDto;
 import civicconnect.api.dto.StatusHistoryDto;
 import civicconnect.observers.AuditLogObserver;
 import civicconnect.records.Comment;
@@ -90,11 +89,6 @@ public class ServiceRequestService {
                 .sorted(Comparator.comparing(ServiceRequest::getCreatedAt, Comparator.reverseOrder()))
                 .map(ServiceRequestResponse::from)
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<ServiceRequestSummaryDto> listFor(String email) {
-        return requestListService.listFor(requireUser(email));
     }
 
     @Transactional(readOnly = true)
@@ -199,7 +193,8 @@ public class ServiceRequestService {
         ServiceRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
         if (!requestListService.canView(user, request)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found.");
+            // 403 matches RequestListService.getFor / NFR003 ASR-01 (not a silent 404).
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not view this request.");
         }
         return request;
     }

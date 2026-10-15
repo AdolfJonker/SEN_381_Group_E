@@ -168,7 +168,7 @@ class ServiceRequestLifecycleTest {
         verify(statusHistoryRepository, never()).save(any(StatusHistory.class));
     }
 
-    @DisplayName("TC-A-06 Staff cannot see another staff member's assigned request (404 before 403)")
+    @DisplayName("TC-A-06 Staff cannot see another staff member's assigned request (403)")
     @Test
     void staffCannotSeeAnotherStaffMembersAssignedRequest() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -183,7 +183,7 @@ class ServiceRequestLifecycleTest {
                 () -> service.get(STAFF_EMAIL, 5L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
         verify(statusHistoryRepository, never()).findByRequestIdOrderByChangedAtAsc(any());
     }
 

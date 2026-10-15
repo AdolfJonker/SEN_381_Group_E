@@ -3,9 +3,9 @@ package civicconnect.repositories;
 import civicconnect.records.RequestStatus;
 import civicconnect.records.ServiceRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, Long> {
@@ -13,14 +13,11 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
 
     List<ServiceRequest> findByAssignedToId(Long assignedToId);
 
-    @Query("""
-            select r from ServiceRequest r
-            left join fetch r.assignedTo
-            where r.status = :openStatus
-               or r.assignedTo.id = :staffId
-            """)
-    List<ServiceRequest> findVisibleToStaff(
-            @Param("openStatus") RequestStatus openStatus,
-            @Param("staffId") Long staffId
-    );
+    // FR005 staff scope: assigned to this staff member, or still Open.
+    List<ServiceRequest> findByAssignedToIdOrStatus(Long assignedToId, RequestStatus status);
+
+    // FR012 summary counts.
+    long countByStatus(RequestStatus status);
+
+    long countByStatusInAndCreatedAtBefore(Collection<RequestStatus> statuses, Instant cutoff);
 }
