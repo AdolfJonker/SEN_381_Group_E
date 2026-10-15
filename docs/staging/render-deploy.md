@@ -1,4 +1,6 @@
-# Render staging deploy (Adolf M3)
+# Render staging deploy (Adolf M3) — optional
+
+**Not required for M3 freeze.** SEN381_M3.pdf §14: real cloud staging is optional and earns no automatic bonus marks. M3 primary environment is credible **simulated staging** ([`demo-prep.md`](./demo-prep.md)). Use this guide only if the team wants a public HTTPS URL later.
 
 Blueprint: repo-root [`render.yaml`](../../render.yaml) · Image: [`Dockerfile`](../../Dockerfile)
 

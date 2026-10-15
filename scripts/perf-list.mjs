@@ -64,17 +64,17 @@ async function main() {
 
   const isLocal = /localhost|127\.0\.0\.1/.test(base);
   const envLabel = isLocal
-    ? `**Local demo/H2** (\`${base}\`). Not Render staging.`
-    : `**Staging** (\`${base}\`).`;
+    ? `**Simulated staging** — local demo/H2 (\`${base}\`). Satisfies M3 one-scenario exercise; public Render optional (SEN381_M3.pdf §14).`
+    : `**Cloud staging** (\`${base}\`).`;
   const statusLine = errors === 0
     ? (isLocal
-      ? `Pass (local characterisation; ${lastCount} rows)`
-      : `Pass (staging characterisation; ${lastCount} rows)`)
+      ? `Pass (simulated-staging characterisation; ${lastCount} rows)`
+      : `Pass (cloud-staging characterisation; ${lastCount} rows)`)
     : "Completed with errors — investigate before release";
   const interpretation = targetMs == null
     ? (isLocal
-      ? "No contractual SLA. Local warm-stack characterisation only — re-run with STAGING_BASE_URL before release freeze."
-      : "No contractual SLA. Free-tier staging characterisation under a light sequential load.")
+      ? "No contractual SLA. Warm-stack characterisation on the M3 simulated staging API. Cloud re-run optional only."
+      : "No contractual SLA. Free-tier cloud staging characterisation under a light sequential load.")
     : avg != null && avg <= targetMs
       ? `Average under the ${targetMs} ms comparison target.`
       : `Average above the ${targetMs} ms comparison target — do not claim production readiness.`;
@@ -96,7 +96,7 @@ async function main() {
 | Evidence | Output of \`scripts/perf-list.mjs\` on ${new Date().toISOString()} |
 | Interpretation | ${interpretation} |
 | What this does **not** prove | Production-scale concurrent municipal users, cold-start after free-tier sleep, or multi-region latency. |
-| Next run required | ${isLocal ? "Re-run on Render: \`STAGING_BASE_URL=https://… node scripts/perf-list.mjs\`" : "Optional: re-run after major list-query changes."} |
+| Next run | ${isLocal ? "Optional: \`STAGING_BASE_URL=https://… node scripts/perf-list.mjs\` if Render is deployed later" : "Optional: re-run after major list-query changes."} |
 
 ## Raw successful durations (ms)
 
