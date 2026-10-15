@@ -1,0 +1,247 @@
+package civicconnect.api;
+
+import civicconnect.records.RequestStatus;
+import civicconnect.records.ServiceRequest;
+import civicconnect.repositories.ServiceRequestRepository;
+import civicconnect.repositories.StatusHistoryRepository;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * API/integration tests for Adolf's M3 persistence slice (demo/H2).
+ * TC-A-INT-*: real Spring context, HTTP session auth, Flyway schema.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("demo")
+class ServiceRequestApiIntegrationTest {
+
+    private static final String REQUESTER = "requester@civicconnect.local";
+    private static final String STAFF = "staff@civicconnect.local";
+    private static final String MANAGEMENT = "management@civicconnect.local";
+    private static final String PASSWORD = "Password123!";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private StatusHistoryRepository statusHistoryRepository;
+
+    @Autowired
+    private ServiceRequestRepository requestRepository;
+
+    @Test
+    @DisplayName("TC-A-INT-01 Submit persists a unique request ID")
+    void submitPersistsUniqueId() throws Exception {
+        MockHttpSession session = login(REQUESTER);
+
+        Long id1 = createRequest(session, "Broken projector A", "Room 1 projector will not power on", "IT Support");
+        Long id2 = createRequest(session, "Broken projector B", "Room 2 projector will not power on", "IT Support");
+
+        assertNotEquals(id1, id2);
+        assertTrue(requestRepository.findById(id1).isPresent());
+        assertTrue(requestRepository.findById(id2).isPresent());
+    }
+
+    @Test
+    @DisplayName("TC-A-INT-02 Illegal status change writes zero extra StatusHistory rows (rollback)")
+    void illegalTransitionLeavesNoOrphanHistory() throws Exception {
+        MockHttpSession requester = login(REQUESTER);
+        MockHttpSession staff = login(STAFF);
+
+        Long requestId = createRequest(requester, "Leaky tap", "Tap drips in kitchen", "Maintenance");
+        accept(staff, requestId);
+
+        long historyBefore = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+
+        mockMvc.perform(post("/api/v1/requests/" + requestId + "/status")
+                        .session(staff)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"Closed","version":1}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        long historyAfter = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+        assertEquals(historyBefore, historyAfter);
+
+        ServiceRequest request = requestRepository.findById(requestId).orElseThrow();
+        assertEquals(RequestStatus.Assigned, request.getStatus());
+    }
+
+    @Test
+    @DisplayName("TC-A-INT-03 Two parallel updates: one 409 conflict, exactly one history row added")
+    void parallelUpdatesOneConflictNoExtraHistory() throws Exception {
+        MockHttpSession requester = login(REQUESTER);
+        MockHttpSession staff = login(STAFF);
+
+        Long requestId = createRequest(requester, "Parallel lock test", "Concurrency check for version", "IT Support");
+        JsonNode accepted = accept(staff, requestId);
+        int version = accepted.get("version").asInt();
+        long historyBefore = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        AtomicInteger success = new AtomicInteger();
+        AtomicInteger conflict = new AtomicInteger();
+        AtomicInteger other = new AtomicInteger();
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < 2; i++) {
+                futures.add(pool.submit(() -> {
+                    try {
+                        ready.countDown();
+                        start.await(5, TimeUnit.SECONDS);
+                        // Fresh login per thread so sessions are not shared across threads.
+                        MockHttpSession threadStaff = login(STAFF);
+                        MvcResult result = mockMvc.perform(post("/api/v1/requests/" + requestId + "/status")
+                                        .session(threadStaff)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("""
+                                                {"status":"InProgress","version":%d}
+                                                """.formatted(version)))
+                                .andReturn();
+                        int code = result.getResponse().getStatus();
+                        if (code == 200) {
+                            success.incrementAndGet();
+                        } else if (code == 409) {
+                            conflict.incrementAndGet();
+                        } else {
+                            other.incrementAndGet();
+                        }
+                    } catch (Exception ex) {
+                        other.incrementAndGet();
+                    }
+                }));
+            }
+
+            assertTrue(ready.await(5, TimeUnit.SECONDS));
+            start.countDown();
+            for (Future<?> future : futures) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        assertEquals(1, success.get(), "exactly one update should succeed");
+        assertEquals(1, conflict.get(), "exactly one update should conflict");
+        assertEquals(0, other.get(), "no unexpected status codes");
+
+        long historyAfter = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+        assertEquals(historyBefore + 1, historyAfter);
+        assertEquals(RequestStatus.InProgress, requestRepository.findById(requestId).orElseThrow().getStatus());
+    }
+
+    @Test
+    @DisplayName("TC-A-INT-04 FR006/FR013 list filters by status and category; FR012 summary counts")
+    void listFiltersAndSummary() throws Exception {
+        MockHttpSession requester = login(REQUESTER);
+        MockHttpSession staff = login(STAFF);
+        MockHttpSession management = login(MANAGEMENT);
+
+        Long openIt = createRequest(requester, "WiFi down in lab", "No connectivity", "IT Support");
+        Long openMaint = createRequest(requester, "Broken chair", "Chair in hall B", "Maintenance");
+        accept(staff, openIt);
+
+        mockMvc.perform(get("/api/v1/requests")
+                        .session(staff)
+                        .param("status", "Open")
+                        .param("category", "Maintenance")
+                        .param("sort", "desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id==" + openMaint + ")]").exists())
+                .andExpect(jsonPath("$[?(@.id==" + openIt + ")]").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/requests")
+                        .session(staff)
+                        .param("search", String.valueOf(openMaint)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(openMaint.intValue()));
+
+        mockMvc.perform(get("/api/v1/requests/summary").session(management))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").isNumber())
+                .andExpect(jsonPath("$.assigned").isNumber())
+                .andExpect(jsonPath("$.inProgress").isNumber())
+                .andExpect(jsonPath("$.resolved").isNumber())
+                .andExpect(jsonPath("$.closed").isNumber())
+                .andExpect(jsonPath("$.overdue").isNumber());
+
+        mockMvc.perform(get("/api/v1/requests/summary").session(staff))
+                .andExpect(status().isForbidden());
+    }
+
+    private MockHttpSession login(String email) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"%s"}
+                                """.formatted(email, PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return (MockHttpSession) result.getRequest().getSession(false);
+    }
+
+    private Long createRequest(MockHttpSession session, String title, String description, String category)
+            throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/requests")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":%s,"description":%s,"category":%s}
+                                """.formatted(
+                                objectMapper.writeValueAsString(title),
+                                objectMapper.writeValueAsString(description),
+                                objectMapper.writeValueAsString(category)
+                        )))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+    }
+
+    private JsonNode accept(MockHttpSession staffSession, Long requestId) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/requests/" + requestId + "/accept")
+                        .session(staffSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version":0}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString());
+    }
+}

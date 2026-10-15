@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchRequests } from "../services/client.js";
 import { CATEGORIES, STATUSES, STATUS_LABELS } from "../services/requestOptions.js";
-import { applyFilters, sortByDate } from "../services/requestFilters.js";
 import RequestTable from "./RequestTable.jsx";
 import "../styles/views.css";
 
 /**
  * Staff landing view (FR005, FR006).
- * The server returns only the staff member's scope: their assigned work plus Open requests.
- * Staff can search by ID or title, filter by status and category, and sort by date.
+ * The server returns only the staff member's scope: their assigned work plus Open requests,
+ * then applies search / status / category / sort on that scope.
  */
 export default function StaffRequestList({ onSelect }) {
   const [requests, setRequests] = useState([]);
@@ -22,7 +21,9 @@ export default function StaffRequestList({ onSelect }) {
 
   useEffect(() => {
     let ignore = false;
-    fetchRequests({ status, category })
+    setLoading(true);
+    setError("");
+    fetchRequests({ search, status, category, sort: sortDir })
       .then((data) => {
         if (!ignore) setRequests(data);
       })
@@ -35,12 +36,7 @@ export default function StaffRequestList({ onSelect }) {
     return () => {
       ignore = true;
     };
-  }, [status, category, reloadKey]);
-
-  const visible = useMemo(
-    () => sortByDate(applyFilters(requests, { status, category, search }), sortDir),
-    [requests, status, category, search, sortDir]
-  );
+  }, [search, status, category, sortDir, reloadKey]);
 
   return (
     <section className="card" aria-labelledby="staff-heading">
@@ -104,7 +100,7 @@ export default function StaffRequestList({ onSelect }) {
       {loading ? (
         <p className="muted">Loading requests…</p>
       ) : (
-        <RequestTable requests={visible} onSelect={onSelect} />
+        <RequestTable requests={requests} onSelect={onSelect} />
       )}
     </section>
   );

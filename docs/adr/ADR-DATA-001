@@ -36,13 +36,13 @@ Each update carries a small version-check overhead. Conflict errors must be hand
 **Risks:** Staff may see conflict errors on busy requests — mitigation: clear “reload and try again” messaging. A new code path could write to `ServiceRequest` without the version check — mitigation: all writes go through `ServiceRequestService`, and PR review checks for it.
 
 ## Affected modules/classes
-**Intended** (board-tracked; **Not Yet Implemented** in source):
+**Implemented (M3):**
 
-- `ServiceRequest` entity — `version` optimistic-concurrency counter
-- `StatusHistory` entity — append-only; written in the same transaction as the status change
-- `ServiceRequestService` — transactional status/assign path
-- `AuditLogObserver` — writes history only after a successful conditional update (ADR-DESIGN-001)
-- Flyway (or equivalent) migrations for schema constraints — planned at bootstrap
+- `ServiceRequest` entity — JPA `@Version` optimistic-concurrency counter
+- `StatusHistory` entity — append-only app path; postgres V2 triggers for DB-level append-only
+- `ServiceRequestService` — transactional accept/status path (guard → flush → audit)
+- `AuditLogObserver` — `MANDATORY` propagation; history only inside the status TX
+- Flyway `V1__init_schema.sql` — status CHECK, indexes, `version` column
 
 ## RTM / implementation evidence
 | Field | Content |
@@ -50,5 +50,5 @@ Each update carries a small version-check overhead. Conflict errors must be hand
 | RTM links | RTM-008 (FR008); RTM-009 (FR009); RTM-011 (FR011); RTM-017 (NFR004) |
 | Related ADR | ADR-DESIGN-001 (Status Transition Guard + Observer) |
 | Evidence | A2 Task 2 (5.2–5.3): transactions; optimistic concurrency; outbox rejected for M2; OWASP server-side validation. NFR004: history not editable or deletable by normal users. |
-| Later consequence | Update at M3 with a concurrency test: two parallel updates on one request — one must fail with a conflict, and no extra `StatusHistory` row may appear. |
-| Application artefact | Planned / Not Yet Implemented |
+| Later consequence | **Done (M3):** `TC-A-INT-03` — two parallel status updates; one HTTP 409; exactly one extra `StatusHistory` row. |
+| Application artefact | Implemented — JPA `@Version` (equivalent to `WHERE id = ? AND version = ?`) |

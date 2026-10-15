@@ -1,0 +1,14 @@
+{
+  "name": "civicconnect-e2e",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:staging": "playwright test --config=playwright.config.js",
+    "perf:list": "node ../scripts/perf-list.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

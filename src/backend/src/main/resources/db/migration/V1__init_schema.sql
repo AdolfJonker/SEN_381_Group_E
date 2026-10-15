@@ -47,7 +47,7 @@ CREATE TABLE status_history (
     from_status     VARCHAR(32) NOT NULL,
     to_status       VARCHAR(32) NOT NULL,
     changed_by_id   BIGINT NOT NULL REFERENCES users (id),
-    "timestamp"      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    changed_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     note            TEXT NULL
 );
 
