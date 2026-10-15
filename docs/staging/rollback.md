@@ -1,11 +1,22 @@
 # Staging rollback note (Adolf M3)
 
+## Deployed revision (fill on first green Render deploy)
+
+| Field | Value |
+|---|---|
+| Staging URL | _pending — see `docs/staging/render-deploy.md`_ |
+| Git SHA | `a7f9913` (current `main` tip at close-out prep; replace with exact deploy SHA) |
+| Tag | `v3.0.0-rc1` (create after first green staging smoke) |
+| Health check | `GET /api/v1/health` |
+| Smoke logins | `staff@civicconnect.local` / `requester@civicconnect.local` (password `Password123!`) |
+| Recorded by / date | _pending_ |
+
 ## Restore target
 
 - **Application:** redeploy the previous known-good Git tag or commit SHA that was recorded when staging last passed health + smoke checks.
-  - Preferred: `git checkout <tag>` then trigger a Render deploy of that revision (or `docker build` / push the tagged image).
-  - Record the deployed SHA in the release evidence summary (Donya) and here when staging is first published.
-- **Placeholder until first deploy:** restore `main` at the release-candidate tag once cut (`v3.0.0-rc1`, matching PED). Until that tag exists, restore the last commit that passed CI on the staging branch.
+  - Preferred: `git checkout v3.0.0-rc1` then trigger a Render deploy of that revision (or `docker build` / push the tagged image).
+  - Record the deployed SHA in the release evidence summary (Donya) and in the table above when staging is first published.
+- **Until the tag exists:** restore the last commit that passed CI on `main` (currently prepared as `a7f9913`).
 
 ## Data / configuration concerns
 

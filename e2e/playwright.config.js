@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
-const baseURL = process.env.STAGING_BASE_URL || process.env.BASE_URL || "http://localhost:8080";
+// Prefer BASE_URL for local Vite (5173). Use STAGING_BASE_URL only for Render/public runs.
+const baseURL = process.env.BASE_URL || process.env.STAGING_BASE_URL || "http://127.0.0.1:5173";
 
 export default defineConfig({
   testDir: "./tests",

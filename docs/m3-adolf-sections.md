@@ -28,7 +28,8 @@ Release-candidate scope for Adolf’s slice includes FR006, FR008 (accept path),
 ## 8. Performance and reliability
 
 - **Scenario:** authenticated staff `GET /api/v1/requests` timed via `scripts/perf-list.mjs`; evidence in `docs/testing/performance-list-evidence.md`.
-- **Recorded run:** local Vite + demo/H2, **0 rows** returned — not staging. Re-run on Render with data before freeze.
+- **Recorded local run (15/10/2026):** **9 rows**, avg **5.9 ms**, 0% errors on demo/H2 (`8081`). Not staging. Re-run on Render before freeze (`docs/staging/render-deploy.md`).
 - **Target:** no contractual SLA; results are characterisation only.
 - **Reliability controls:** optimistic concurrency (RISK-010); transactional audit write; staging rollback note for bad deploys.
 - **Limits:** free-tier DB sleep/expiry and JVM memory (RISK-006). A green performance run does **not** prove municipal production load.
+- **Close-out tracker:** `docs/testing/m3-adolf-closeout.md`. PED paste pack: `docs/PED/m3-adolf-paste.md`.

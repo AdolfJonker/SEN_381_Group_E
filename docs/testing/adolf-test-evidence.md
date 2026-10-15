@@ -5,7 +5,7 @@
 | Owner | Adolf |
 | Covers | FR001, FR006, FR007 (detail deny), FR008, FR009 (status unit on write path), FR012, FR013, NFR003, NFR004, ADR-DATA-001 |
 | Does **not** claim | **FR005 / RTM-005** (access-control owns staff list scope: `TC-UNIT-RBAC-*`, `TC-API-SEC-04`) |
-| Document status | Current suite green locally (`./mvnw -B verify`, 2026-10-15). Historical fails recorded in §5. Staging E2E/PERF re-run still outstanding. |
+| Document status | Local evidence complete (2026-10-15): Surefire green; E2E 3/3; PERF 9-row local run. **Render staging E2E/PERF still required for freeze.** |
 | Last updated | 15/10/2026 |
 
 ## 1. Purpose and scope
@@ -49,9 +49,9 @@ Related teammate evidence (not counted as Adolf-owned):
 | Unit — `ServiceRequestLifecycleTest` | 7 | TC-A-01…A-07 | Pass (automated) |
 | Unit — `StaffFilterStrategyTest` | 2 | TC-A-08, TC-A-09 | Pass (automated) |
 | API — `ServiceRequestApiIntegrationTest` | 4 | TC-A-INT-01…04 | Pass (automated) |
-| E2E — Playwright | 3 | TC-A-E2E-01, TC-A-E2E-02, TC-A-E2E-02b | Pass (local) |
-| Performance — `scripts/perf-list.mjs` | 1 | PERF-LIST-01 | Pass (local characterisation) |
-| **Total** | **17** | **17 IDs** (each mapped once; none to RTM-005) | **17 pass / 0 fail (current)** |
+| E2E — Playwright | 3 | TC-A-E2E-01, TC-A-E2E-02, TC-A-E2E-02b | Pass (local 2026-10-15, 3/3) |
+| Performance — `scripts/perf-list.mjs` | 1 | PERF-LIST-01 | Pass (local; **9 rows**; avg ~5.9 ms) |
+| **Total** | **17** | **17 IDs** (each mapped once; none to RTM-005) | **17 pass / 0 fail (current local)** |
 
 Backend Adolf classes alone: **13** Surefire tests. Full project Surefire after merge isolation fix: **116** tests, **0** failures (local 2026-10-15).
 
@@ -72,10 +72,10 @@ Backend Adolf classes alone: **13** Surefire tests. Full project Surefire after 
 | TC-A-INT-02 | NFR004 / RTM-017 | Illegal write leaves no orphan history | API (H2) | Assigned → Closed skip | 400; history unchanged | Pass | Pass (automated) | same | TX rollback |
 | TC-A-INT-03 | FR008 / RTM-008, ADR-DATA-001 | Parallel conflict | Parallel MockMvc | Two same-version updates | One 200, one 409; +1 history | Pass | Pass (automated) | same | H2 single JVM |
 | TC-A-INT-04 | FR006 / RTM-006, FR012 / RTM-012, FR013 / RTM-013 | Filter + summary | API (H2) | status/category/search; summary | Filtered list; counts; staff 403 on summary | Pass | Pass (automated) | same | Not FR005 list-strategy ownership |
-| TC-A-E2E-01 | FR001–FR011 path | Full lifecycle | Playwright | Demo users | Closed visible to requester | Pass (after selector fixes) | Pass (local) | `e2e/tests/lifecycle.spec.js` | Re-run on staging URL |
-| TC-A-E2E-02 | NFR003 / RTM-016 | Unauth list blocked | Playwright API | No cookie | 401/403 | Pass | Pass (local) | `e2e/tests/unauthorised.spec.js` | Complements Donya ASR-01 |
-| TC-A-E2E-02b | NFR003 / RTM-016, FR012 | Staff denied summary | Playwright API | Staff session | 403 | Pass | Pass (local) | same | — |
-| PERF-LIST-01 | FR006 (characterisation) | List hot path | Timed HTTP | Staff list 10× | Metrics only; no SLA | avg ~9 ms; **0 rows**; **local** only | Pass (empty-list local) | `performance-list-evidence.md` | Re-run Render + data |
+| TC-A-E2E-01 | FR001–FR011 path | Full lifecycle | Playwright | Demo users | Closed visible to requester | Pass 2026-10-15 (Vite `127.0.0.1:5173`) | Pass (local) | `e2e/tests/lifecycle.spec.js` | Re-run on staging URL for freeze |
+| TC-A-E2E-02 | NFR003 / RTM-016 | Unauth list blocked | Playwright API | No cookie | 401/403 | Pass 2026-10-15 | Pass (local) | `e2e/tests/unauthorised.spec.js` | Complements Donya ASR-01 |
+| TC-A-E2E-02b | NFR003 / RTM-016, FR012 | Staff denied summary | Playwright API | Staff session | 403 | Pass 2026-10-15 | Pass (local) | same | — |
+| PERF-LIST-01 | FR006 (characterisation) | List hot path | Timed HTTP | Staff list 10× | Metrics only; no SLA | avg 5.9 ms; p95 8.3 ms; **9 rows**; local `8081` | Pass (populated local) | `performance-list-evidence.md` | Re-run Render for freeze |
 
 ## 5. Failure history (recorded)
 
@@ -150,6 +150,8 @@ Detail tables for each defect follow.
 | C | CI after Option A merge | Ambiguous status mapping; 12 Errors (§5.2) → fixed | 15/10/2026 |
 | D | CI after status ownership fix | AccessControl 2 Failures (pollution, §5.4) → isolation fix | 15/10/2026 |
 | E | Local `./mvnw -B verify` after isolation fix | **116 tests, 0 failures, 0 errors** | 15/10/2026 |
+| F | Local Vite+demo: Playwright + PERF (seeded 9 Open rows) | E2E **3/3 pass**; PERF avg 5.9 ms / 0% errors / 9 rows | 15/10/2026 |
+| G | Render staging E2E + PERF | **Pending** — needs live `STAGING_BASE_URL` | — |
 
 ## 7. Quality interpretation (Adolf slice)
 
