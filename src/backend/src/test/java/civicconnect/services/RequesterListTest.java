@@ -1,3 +1,4 @@
+
 package civicconnect.services;
 
 import civicconnect.api.dto.ServiceRequestResponse;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for the requester list (FR003, NFR003). No Spring context and no database.
+ * Unit tests for the requester list (FR003, NFR003).
+ * No Spring context and no database.
  */
 @ExtendWith(MockitoExtension.class)
 class RequesterListTest {
@@ -42,8 +44,13 @@ class RequesterListTest {
     @InjectMocks
     private ServiceRequestService service;
 
-    private static ServiceRequest request(long id, String title, String category,
-                                          RequestStatus status, Instant createdAt) {
+    private static ServiceRequest request(
+            long id,
+            String title,
+            String category,
+            RequestStatus status,
+            Instant createdAt
+    ) {
         ServiceRequest request = new ServiceRequest();
         request.setId(id);
         request.setTitle(title);
@@ -64,11 +71,15 @@ class RequesterListTest {
     void listShowsRequiredFields() {
         Instant created = Instant.parse("2026-10-13T10:00:00Z");
         User requester = userWithId(7L);
+
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(requester));
         when(requestRepository.findBySubmittedById(7L)).thenReturn(List.of(
-                request(41L, "Broken light", "Facility Fault", RequestStatus.Assigned, created)));
+                request(41L, "Broken light", "Facility Fault",
+                        RequestStatus.Assigned, created)
+        ));
 
-        List<ServiceRequestResponse> result = service.getRequestsForRequester(EMAIL);
+        List<ServiceRequestResponse> result =
+                service.getRequestsForRequester(EMAIL);
 
         assertEquals(1, result.size());
         ServiceRequestResponse item = result.get(0);
@@ -83,26 +94,62 @@ class RequesterListTest {
     void requesterOnlyReceivesOwnRequests() {
         Instant created = Instant.parse("2026-10-13T10:00:00Z");
         User requester = userWithId(7L);
+
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(requester));
         when(requestRepository.findBySubmittedById(7L)).thenReturn(List.of(
-                request(41L, "Mine", "Other", RequestStatus.Open, created)));
+                request(41L, "Mine", "Other", RequestStatus.Open, created)
+        ));
+
         lenient().when(requestRepository.findBySubmittedById(8L)).thenReturn(List.of(
-                request(99L, "Somebody else", "Other", RequestStatus.Open, created)));
+                request(99L, "Somebody else", "Other", RequestStatus.Open, created)
+        ));
 
-        List<ServiceRequestResponse> result = service.getRequestsForRequester(EMAIL);
+        List<ServiceRequestResponse> result =
+                service.getRequestsForRequester(EMAIL);
 
-        assertEquals(List.of(41L), result.stream().map(ServiceRequestResponse::getId).toList());
+        assertEquals(
+                List.of(41L),
+                result.stream().map(ServiceRequestResponse::getId).toList()
+        );
     }
 
     @DisplayName("TC-E-14 an unknown or signed out user is rejected with 401 and nothing is read (NFR003)")
     @Test
     void unknownUserIsRejected() {
-        when(userRepository.findByEmail("ghost@civicconnect.local")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("ghost@civicconnect.local"))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> service.getRequestsForRequester("ghost@civicconnect.local"));
+        ResponseStatusException error = assertThrows(
+                ResponseStatusException.class,
+                () -> service.getRequestsForRequester("ghost@civicconnect.local")
+        );
 
         assertEquals(401, error.getStatusCode().value());
         verifyNoInteractions(requestRepository);
+    }
+
+    @DisplayName("Requester list returns newest first (FR003)")
+    @Test
+    void requestsAreReturnedNewestFirst() {
+        Instant older = Instant.parse("2026-10-12T10:00:00Z");
+        Instant newer = Instant.parse("2026-10-14T10:00:00Z");
+
+        User requester = userWithId(7L);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(requester));
+        when(requestRepository.findBySubmittedById(7L)).thenReturn(List.of(
+                request(41L, "Older request", "Facility Fault",
+                        RequestStatus.Open, older),
+                request(42L, "Newer request", "IT Support",
+                        RequestStatus.Assigned, newer)
+        ));
+
+        List<ServiceRequestResponse> result =
+                service.getRequestsForRequester(EMAIL);
+
+        assertEquals(
+                List.of(42L, 41L),
+                result.stream().map(ServiceRequestResponse::getId).toList()
+        );
     }
 }
