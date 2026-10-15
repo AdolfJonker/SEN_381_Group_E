@@ -4,7 +4,7 @@
 |---|---|
 | Owner | Donya Pretorius |
 | Covers | NFR003, FR005, FR006, FR011, FR012, FR013 (RTM-016, RTM-005, RTM-006, RTM-011, RTM-012, RTM-013) |
-| Document status | Backend tests passed locally (`mvnw verify`, 66 tests, 0 failures, 14/10/2026). CI run on main: link to add. TC-D-INT-01c added 15/10/2026, to run |
+| Document status | Backend tests passed locally (`mvnw verify`, 66 tests, 0 failures, 14/10/2026). TC-D-INT-01c passed locally 15/10/2026 (AccessControlApiTest: 9 tests, 0 failures). CI run on main: link to add. |
 | Release candidate | To be confirmed at evidence freeze |
 | Code baseline | main at cf5a4f2 (after #120) |
 | Last updated | 15/10/2026 |
@@ -41,7 +41,7 @@ This record holds the test design and results for role-based access, the role vi
 | TC-D-03 | Management strategy returns all requests | Unit | Unit | FR012, FR013 | RTM-005 | Pass (local, 14/10/2026) |
 | TC-D-04 | Service picks the right strategy per role; missing role refused | Unit | Unit | ADR-DESIGN-002 | RTM-005 | Pass (local, 14/10/2026) |
 | TC-D-INT-01a/b | Not signed in or wrong password returns 401 | Negative | API | NFR003, RISK-004 | RTM-016 | Pass (local, 14/10/2026) |
-| TC-D-INT-01c | Not signed in on `/requests/mine`, `/requests/{id}` and `/requests/{id}/status` returns 401 | Negative | API | NFR003 | RTM-016 | Not run (added 15/10/2026) |
+| TC-D-INT-01c | Not signed in on `/requests/mine`, `/requests/{id}` and `/requests/{id}/status` returns 401 | Negative | API | NFR003 | RTM-016 | Pass (local, 15/10/2026) |
 | TC-D-INT-02 | Wrong role returns 403; Management gets summary counts | Negative | API | NFR003, FR012 | RTM-016, RTM-012 | Pass (local, 14/10/2026) |
 | TC-D-INT-03 | Requester cannot get another requester's request | Negative | API | NFR003 AC, ASR-01 | RTM-016 | Pass (local, 14/10/2026) |
 | TC-D-INT-04 | Staff list holds only the staff scope | API | API | FR005 | RTM-005 | Pass (local, 14/10/2026) |
@@ -56,8 +56,9 @@ This record holds the test design and results for role-based access, the role vi
 * Why selected: the 401 rule was merged after that live check. This test shows which code answer is correct now.
 * Input: no session. `GET /api/v1/requests/mine`, `GET /api/v1/requests/{id}`, `POST /api/v1/requests/{id}/status`.
 * Expected result: 401 for all three.
-* Evidence: `AccessControlApiTest.java`; run to add.
-* Interpretation: if it passes, observation 1 is closed on main. The 14/10 live check stays a record of the older code.
+* Evidence: `AccessControlApiTest.java`; local `mvnw verify` 15/10/2026: AccessControlApiTest 9 tests, 0 failures.
+* Actual result: 401 for all three. Pass.
+* Interpretation: observation 1 is closed on main. The 14/10 live check stays a record of the older code.
 
 ### TC-D-01 to 03 Each role strategy on its own
 * Basis: FR005, NFR003, ADR-DESIGN-002.
