@@ -4,7 +4,9 @@ import civicconnect.records.RequestStatus;
 import civicconnect.records.Role;
 import civicconnect.records.ServiceRequest;
 import civicconnect.records.User;
+import civicconnect.repositories.CommentRepository;
 import civicconnect.repositories.ServiceRequestRepository;
+import civicconnect.repositories.StatusHistoryRepository;
 import civicconnect.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * API tests (NFR003, ASR-01, FR005, FR012, RISK-003, RISK-004).
- * Runs DemoUserLoader creates the three demo users, doesnt affect any history or data.
- * Each test runs in a transaction that is rolled back, so tests do not affect each other.
+ * DemoUserLoader creates the three demo users.
+ * Each test runs in a transaction that is rolled back.
+ * Seed clears request tables first so committed data from other SpringBoot tests
+ * (shared H2 context) cannot skew absolute counts.
  */
 @SpringBootTest
 @ActiveProfiles("demo")
@@ -57,6 +61,12 @@ class AccessControlApiTest {
     private ServiceRequestRepository requests;
 
     @Autowired
+    private StatusHistoryRepository statusHistory;
+
+    @Autowired
+    private CommentRepository comments;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private ServiceRequest requesterOwn;
@@ -64,13 +74,19 @@ class AccessControlApiTest {
 
     @BeforeEach
     void seed() {
+        comments.deleteAll();
+        statusHistory.deleteAll();
+        requests.deleteAll();
+
         User requester = users.findByEmail(REQUESTER).orElseThrow();
-        User other = new User();
-        other.setEmail(OTHER_REQUESTER);
-        other.setName("Other Requester");
-        other.setRole(Role.Requester);
-        other.setPasswordHash(passwordEncoder.encode("test-only-password"));
-        users.save(other);
+        User other = users.findByEmail(OTHER_REQUESTER).orElseGet(() -> {
+            User created = new User();
+            created.setEmail(OTHER_REQUESTER);
+            created.setName("Other Requester");
+            created.setRole(Role.Requester);
+            created.setPasswordHash(passwordEncoder.encode("test-only-password"));
+            return users.save(created);
+        });
 
         requesterOwn = requests.save(newRequest("Leak in Block A", "Facility Fault", RequestStatus.Open, requester, 1));
         otherRequesterOwn = requests.save(newRequest("Lost laptop charger", "Lost Property", RequestStatus.Open, other, 10));
