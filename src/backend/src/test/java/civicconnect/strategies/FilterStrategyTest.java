@@ -40,7 +40,7 @@ class FilterStrategyTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-01 Requester strategy asks only for the requester's own requests")
+    @DisplayName("TC-D-01 Requester strategy asks only for the requester's own requests")
     void requesterSeesOnlyOwnRequests() {
         User alice = user(1, Role.Requester);
         User bob = user(2, Role.Requester);
@@ -57,7 +57,7 @@ class FilterStrategyTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-02 Staff strategy returns own assigned work plus unaccepted Open requests")
+    @DisplayName("TC-D-02 Staff strategy returns own assigned work plus unaccepted Open requests")
     void staffSeesAssignedAndOpen() {
         User requester = user(1, Role.Requester);
         User staff = user(5, Role.Staff);
@@ -76,7 +76,7 @@ class FilterStrategyTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-03 Management strategy returns all requests")
+    @DisplayName("TC-D-03 Management strategy returns all requests")
     void managementSeesAll() {
         User requester = user(1, Role.Requester);
         User manager = user(9, Role.Management);

@@ -104,17 +104,17 @@ class AccessControlApiTest {
         return request;
     }
 
-    // ---------- TC-API-SEC-01: not signed in -> 401 ----------
+    // ---------- TC-D-INT-01: not signed in -> 401 ----------
 
     @Test
-    @DisplayName("TC-API-SEC-01a no session on a data route returns 401")
+    @DisplayName("TC-D-INT-01a no session on a data route returns 401")
     void unauthenticatedListIsRejected() throws Exception {
         mvc.perform(get("/api/v1/requests")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/requests/summary")).andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("TC-API-SEC-01b wrong password returns 401 with a generic message")
+    @DisplayName("TC-D-INT-01b wrong password returns 401 with a generic message")
     void wrongPasswordIsRejected() throws Exception {
         mvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,10 +123,22 @@ class AccessControlApiTest {
                 .andExpect(jsonPath("$.message").value("Invalid email or password"));
     }
 
-    // ---------- TC-API-SEC-02: wrong role -> 403 ----------
+    @Test
+    @DisplayName("TC-D-INT-01c no session on the requester list and status routes returns 401, not 403")
+    void unauthenticatedRequesterAndStatusRoutesAreRejected() throws Exception {
+        // Re-checks observation 1 in status-lifecycle-test-evidence.md (signed-out GET /requests/mine gave 403).
+        mvc.perform(get("/api/v1/requests/mine")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/requests/" + requesterOwn.getId())).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/requests/" + requesterOwn.getId() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"toStatus\":\"InProgress\",\"expectedVersion\":0}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ---------- TC-D-INT-02: wrong role -> 403 ----------
 
     @Test
-    @DisplayName("TC-API-SEC-02a Requester and Staff cannot read the Management summary (403)")
+    @DisplayName("TC-D-INT-02a Requester and Staff cannot read the Management summary (403)")
     void nonManagementCannotReadSummary() throws Exception {
         mvc.perform(get("/api/v1/requests/summary").with(user(REQUESTER).roles("Requester")))
                 .andExpect(status().isForbidden());
@@ -135,7 +147,7 @@ class AccessControlApiTest {
     }
 
     @Test
-    @DisplayName("TC-API-SEC-02b Management reads the summary with the FR012 counts (200)")
+    @DisplayName("TC-D-INT-02b Management reads the summary with the FR012 counts (200)")
     void managementReadsSummary() throws Exception {
         mvc.perform(get("/api/v1/requests/summary").with(user(MANAGEMENT).roles("Management")))
                 .andExpect(status().isOk())
@@ -147,7 +159,7 @@ class AccessControlApiTest {
     }
 
     @Test
-    @DisplayName("TC-API-SEC-02c Staff cannot submit a request (403)")
+    @DisplayName("TC-D-INT-02c Staff cannot submit a request (403)")
     void staffCannotSubmit() throws Exception {
         mvc.perform(post("/api/v1/requests").with(user(STAFF).roles("Staff"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -155,10 +167,10 @@ class AccessControlApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ---------- TC-API-SEC-03 (ASR-01): a requester cannot get another requester's data ----------
+    // ---------- TC-D-INT-03 (ASR-01): a requester cannot get another requester's data ----------
 
     @Test
-    @DisplayName("TC-API-SEC-03a Requester opening another requester's request by id returns 403")
+    @DisplayName("TC-D-INT-03a Requester opening another requester's request by id returns 403")
     void requesterCannotOpenOthersRequest() throws Exception {
         mvc.perform(get("/api/v1/requests/" + otherRequesterOwn.getId()).with(user(REQUESTER).roles("Requester")))
                 .andExpect(status().isForbidden());
@@ -167,7 +179,7 @@ class AccessControlApiTest {
     }
 
     @Test
-    @DisplayName("TC-API-SEC-03b Requester list holds only the requester's own requests")
+    @DisplayName("TC-D-INT-03b Requester list holds only the requester's own requests")
     void requesterListIsScoped() throws Exception {
         Long requesterId = users.findByEmail(REQUESTER).orElseThrow().getId();
         mvc.perform(get("/api/v1/requests").with(user(REQUESTER).roles("Requester")))
@@ -179,7 +191,7 @@ class AccessControlApiTest {
     // ---------- FR005: staff scope through the API ----------
 
     @Test
-    @DisplayName("TC-API-SEC-04 Staff list holds Open requests and own assigned work, not closed work of others")
+    @DisplayName("TC-D-INT-04 Staff list holds Open requests and own assigned work, not closed work of others")
     void staffListIsScoped() throws Exception {
         mvc.perform(get("/api/v1/requests").with(user(STAFF).roles("Staff")))
                 .andExpect(status().isOk())
