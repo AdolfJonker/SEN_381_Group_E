@@ -131,3 +131,10 @@ This record holds the test design and results for role-based access, the role vi
 ## 6. Manual UI check (supporting, not counted)
 
 Run against a local stub of the API on 13/10/2026: Management lands on the summary; IT Support + Open filter shows 1 of 7; Staff lands on the request list; search works; no sideways scroll at 375 px. Re-run against staging.
+
+## 7. Defects found in this slice
+
+| ID | Description | Severity | Status | Resolution | Regression test |
+|---|---|---|---|---|---|
+| DEF-D01 | Management page scrolled sideways at 375 px (NFR005) | Low | Fixed | Layout changed; re-checked at 375 px | Manual 375 px check |
+| DEF-D02 | A signed-out call returned 403 instead of 401 (same as OBS-01 in the status-lifecycle evidence) | Low | Fixed | 401 entry point in SecurityConfig | TC-D-INT-01c |
