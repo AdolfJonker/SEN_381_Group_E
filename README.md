@@ -103,14 +103,10 @@ Tests: `./mvnw test` in `backend/demo`.
 
 ## Known limitations
 
-These are known and intentional at Milestone 2; they are tracked for later milestones.
+Tracked technical debt is in [`Technical Debt`](Technical%20Debt). Highlights for M3:
 
-- **Demo authentication only.** The API trusts an `X-User-Id` request header, and Spring Security is configured to `permitAll`. Any client can act as any user. Role checks happen in `ServiceRequestService`, but there is no real login, session or token yet.
-- **Design patterns not yet in code.** The status-change audit row is written directly in `ServiceRequestService`; the Observer classes from ADR-DESIGN-001 / ADR-INT-001 (`AuditLogObserver`, `StatusVisibilityUpdater`) do not exist yet. Role-based list filtering is a `switch` on role; the `FilterStrategy` classes from ADR-DESIGN-002 are not implemented yet. The FR009 transition table lives in `RequestStatus`.
-- **Staff see all requests.** Staff and Management both receive the full request list; FR005 staff scoping is not yet applied.
-- **Concurrency.** `ServiceRequest` has an optimistic-lock `@Version`, but a conflict is not yet mapped to a "reload and try again" response, and the client does not send the version.
-- **Schema backstops.** The Flyway schema has no `CHECK` constraint on status yet (ADR-DATA-001).
-- **Personal data.** `GET /api/users` returns user email addresses.
-- **Demo data.** Seed users have the placeholder password `{noop}demo`. The loader seeds any empty database, including under the postgres profile.
-- **Tests.** Only a Spring context-load test exists (`DemoApplicationTests`).
-- **Not deployed.** Deployment direction is documented in the PED (§5.8); there is no hosted environment or CI pipeline yet.
+- **SPA fallback auth (TD-007).** `/api/v1/**` routes are authenticated / role-gated; `.anyRequest().permitAll()` remains only so packaged React Router paths can load.
+- **H2 append-only (TD-006).** NFR004 DB triggers apply on the postgres profile; demo/H2 is app-layer only.
+- **PERF-LIST-01.** Recorded run was local with an empty list (0 rows), not staging — see `docs/testing/performance-list-evidence.md`.
+- **StatusVisibilityUpdater (NFR001 / FR004).** Still pending team scope decision.
+- **Release-candidate tag.** Use `v3.0.0-rc1` (see `docs/staging/rollback.md` and PED version history).

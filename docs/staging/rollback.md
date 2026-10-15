@@ -5,7 +5,7 @@
 - **Application:** redeploy the previous known-good Git tag or commit SHA that was recorded when staging last passed health + smoke checks.
   - Preferred: `git checkout <tag>` then trigger a Render deploy of that revision (or `docker build` / push the tagged image).
   - Record the deployed SHA in the release evidence summary (Donya) and here when staging is first published.
-- **Placeholder until first deploy:** restore `main` at the release-candidate tag once cut (e.g. `m3-rc1`). Until that tag exists, restore the last commit that passed CI on the staging branch.
+- **Placeholder until first deploy:** restore `main` at the release-candidate tag once cut (`v3.0.0-rc1`, matching PED). Until that tag exists, restore the last commit that passed CI on the staging branch.
 
 ## Data / configuration concerns
 

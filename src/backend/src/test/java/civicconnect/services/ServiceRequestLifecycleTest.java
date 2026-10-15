@@ -34,8 +34,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for accept / status updates (optimistic locking, history, visibility).
+ * Unit tests for accept / status updates (optimistic locking, history, detail deny).
  * IDs use TC-A-* (Adolf). Elcke's evidence cases remain TC-E-*.
+ * Mapping: A-01/04/05/07 → FR008/RTM-008; A-02/03 → FR009/RTM-009; A-06 → FR007/RTM-007.
+ * None of these IDs claim FR005/RTM-005 (access-control owns list scope).
  * No Spring context and no database.
  */
 @ExtendWith(MockitoExtension.class)
@@ -77,7 +79,7 @@ class ServiceRequestLifecycleTest {
         );
     }
 
-    @DisplayName("TC-A-01 Accept returns the flushed version that matches the stored entity")
+    @DisplayName("TC-A-01 (FR008/RTM-008) Accept returns the flushed version that matches the stored entity")
     @Test
     void acceptReturnsFlushedVersion() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -95,7 +97,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository).saveAndFlush(request);
     }
 
-    @DisplayName("TC-A-02 updateStatus returns the flushed version that matches the stored entity")
+    @DisplayName("TC-A-02 (FR009/RTM-009) updateStatus returns the flushed version that matches the stored entity")
     @Test
     void updateStatusReturnsFlushedVersion() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -114,7 +116,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository).saveAndFlush(request);
     }
 
-    @DisplayName("TC-A-03 Illegal status move returns 400 and writes zero history rows (D3)")
+    @DisplayName("TC-A-03 (FR009/RTM-009) Illegal status move returns 400 and writes zero history rows (D3)")
     @Test
     void illegalMoveWritesZeroHistoryRows() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -134,7 +136,7 @@ class ServiceRequestLifecycleTest {
         assertEquals(0, request.getVersion());
     }
 
-    @DisplayName("TC-A-04 Stale version returns 409 and writes nothing")
+    @DisplayName("TC-A-04 (FR008/RTM-008, ADR-DATA-001) Stale version returns 409 and writes nothing")
     @Test
     void staleVersionReturnsConflict() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -152,7 +154,7 @@ class ServiceRequestLifecycleTest {
         verify(requestRepository, never()).saveAndFlush(any());
     }
 
-    @DisplayName("TC-A-05 Requester cannot accept a request")
+    @DisplayName("TC-A-05 (FR008/RTM-008, NFR003) Requester cannot accept a request")
     @Test
     void requesterCannotAccept() {
         User requester = user(7L, Role.Requester, REQUESTER_EMAIL, "Requester");
@@ -168,7 +170,7 @@ class ServiceRequestLifecycleTest {
         verify(statusHistoryRepository, never()).save(any(StatusHistory.class));
     }
 
-    @DisplayName("TC-A-06 Staff cannot see another staff member's assigned request (403)")
+    @DisplayName("TC-A-06 (FR007/RTM-007, NFR003 — not RTM-005) Staff cannot get another staff member's assigned request (403)")
     @Test
     void staffCannotSeeAnotherStaffMembersAssignedRequest() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");
@@ -187,7 +189,7 @@ class ServiceRequestLifecycleTest {
         verify(statusHistoryRepository, never()).findByRequestIdOrderByChangedAtAsc(any());
     }
 
-    @DisplayName("TC-A-07 Accept writes exactly one history row")
+    @DisplayName("TC-A-07 (FR008/RTM-008, NFR004) Accept writes exactly one history row")
     @Test
     void acceptWritesOneHistoryRow() {
         User staff = user(1L, Role.Staff, STAFF_EMAIL, "Staff One");

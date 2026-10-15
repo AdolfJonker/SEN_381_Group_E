@@ -18,6 +18,7 @@ async function login(page, email) {
 
 /**
  * TC-A-E2E-01: submit → accept → In Progress → Resolved → Closed; requester sees status.
+ * Covers FR001–FR011 path (E2E). Does not claim FR005/RTM-005.
  * Run against staging: STAGING_BASE_URL=https://… npm test
  */
 test("TC-A-E2E-01 full lifecycle visible to requester", async ({ browser }) => {
