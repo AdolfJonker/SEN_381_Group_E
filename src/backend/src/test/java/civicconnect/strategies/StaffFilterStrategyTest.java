@@ -16,9 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Staff visibility for accept path (FR008): Open requests for all staff; assigned only for the owner.
- * TC-A-08/09 complement TC-UNIT-RBAC-02 (RTM-005 owned by access-control FilterStrategyTest).
- * These IDs map to FR008 / accept readiness, not RTM-005.
+ * Staff visibility for accept path (FR008 / RTM-008 only): Open requests for all staff; assigned only for the owner.
+ * TC-A-08/09 complement TC-UNIT-RBAC-02. Access-control owns FR005 / RTM-005.
+ * Do not map these IDs to RTM-005.
  */
 @ExtendWith(MockitoExtension.class)
 class StaffFilterStrategyTest {
@@ -29,7 +29,7 @@ class StaffFilterStrategyTest {
     @InjectMocks
     private StaffFilterStrategy strategy;
 
-    @DisplayName("TC-A-08 Any staff member can see an Open request (FR008 accept readiness)")
+    @DisplayName("TC-A-08 (FR008/RTM-008 only — not RTM-005) Any staff member can see an Open request")
     @Test
     void openRequestIsVisibleToAnyStaff() {
         ServiceRequest request = request(RequestStatus.Open, null);
@@ -37,7 +37,7 @@ class StaffFilterStrategyTest {
         assertTrue(strategy.canView(user(99L), request));
     }
 
-    @DisplayName("TC-A-09 Staff cannot see another staff member's assigned request (FR008)")
+    @DisplayName("TC-A-09 (FR008/RTM-008 only — not RTM-005) Staff cannot see another staff member's assigned request")
     @Test
     void assignedRequestIsOnlyVisibleToAssignee() {
         User assignee = user(2L);

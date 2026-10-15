@@ -37,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * API/integration tests for Adolf's M3 persistence slice (demo/H2).
  * TC-A-INT-*: real Spring context, HTTP session auth, Flyway schema.
+ * INT-01→RTM-001; INT-02→RTM-017; INT-03→RTM-008; INT-04→RTM-006/012/013.
+ * None claim FR005/RTM-005.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -61,7 +63,7 @@ class ServiceRequestApiIntegrationTest {
     private ServiceRequestRepository requestRepository;
 
     @Test
-    @DisplayName("TC-A-INT-01 Submit persists a unique request ID")
+    @DisplayName("TC-A-INT-01 (FR001/RTM-001) Submit persists a unique request ID")
     void submitPersistsUniqueId() throws Exception {
         MockHttpSession session = login(REQUESTER);
 
@@ -74,7 +76,7 @@ class ServiceRequestApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-A-INT-02 Illegal status change writes zero extra StatusHistory rows (rollback)")
+    @DisplayName("TC-A-INT-02 (NFR004/RTM-017) Illegal status change writes zero extra StatusHistory rows (rollback)")
     void illegalTransitionLeavesNoOrphanHistory() throws Exception {
         MockHttpSession requester = login(REQUESTER);
         MockHttpSession staff = login(STAFF);
@@ -100,7 +102,7 @@ class ServiceRequestApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-A-INT-03 Two parallel updates: one 409 conflict, exactly one history row added")
+    @DisplayName("TC-A-INT-03 (FR008/RTM-008, ADR-DATA-001) Two parallel updates: one 409 conflict, exactly one history row added")
     void parallelUpdatesOneConflictNoExtraHistory() throws Exception {
         MockHttpSession requester = login(REQUESTER);
         MockHttpSession staff = login(STAFF);
@@ -166,7 +168,7 @@ class ServiceRequestApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-A-INT-04 FR006/FR013 list filters by status and category; FR012 summary counts")
+    @DisplayName("TC-A-INT-04 (FR006/RTM-006, FR012/RTM-012, FR013/RTM-013 — not RTM-005) list filters + summary")
     void listFiltersAndSummary() throws Exception {
         MockHttpSession requester = login(REQUESTER);
         MockHttpSession staff = login(STAFF);

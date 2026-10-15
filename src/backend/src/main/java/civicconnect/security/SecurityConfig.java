@@ -52,7 +52,8 @@ public class SecurityConfig {
                         // FR005 list and single request: any signed-in role; the FilterStrategy limits the rows
                         .requestMatchers(HttpMethod.GET, "/api/v1/requests", "/api/v1/requests/*").authenticated()
                         .requestMatchers("/api/v1/**").authenticated()
-                        // SPA client routes (React Router) when packaged into the jar
+                        // SPA client routes (React Router) when packaged into the jar.
+                        // TD-007: prefer denyAll + SPA forwarder in M4; keep /api/v1/** rules above this.
                         .anyRequest().permitAll()
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * TC-A-E2E-02: unauthenticated API access is blocked (401).
- * Complements Donya's role tests; proves the gate on staging.
+ * TC-A-E2E-02 / 02b: NFR003 / RTM-016 — unauthenticated / wrong-role API access blocked.
+ * Complements Donya's role tests. Does not claim FR005/RTM-005.
  */
 test("TC-A-E2E-02 unauthenticated request list is blocked", async ({ request }) => {
   const response = await request.get("/api/v1/requests");
