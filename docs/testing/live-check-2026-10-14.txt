@@ -1,0 +1,48 @@
+--- TC-E-14: signed out, expect 401 or 403
+GET /requests/mine -> 403
+--- TC-E-25: all seven valid categories, expect success
+POST /requests -> 201 {"id":1,"title":"Valid Facility Fault","description":"Valid description","category":"Facility Fault","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.585547600Z","updatedAt":"2026-10-14T18:34:22.585547600Z","version":0}
+POST /requests -> 201 {"id":2,"title":"Valid Damaged Equipment","description":"Valid description","category":"Damaged Equipment","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.615509100Z","updatedAt":"2026-10-14T18:34:22.615509100Z","version":0}
+POST /requests -> 201 {"id":3,"title":"Valid Security Concern","description":"Valid description","category":"Security Concern","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.626507Z","updatedAt":"2026-10-14T18:34:22.626507Z","version":0}
+POST /requests -> 201 {"id":4,"title":"Valid IT Support","description":"Valid description","category":"IT Support","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.639722600Z","updatedAt":"2026-10-14T18:34:22.639722600Z","version":0}
+POST /requests -> 201 {"id":5,"title":"Valid Maintenance","description":"Valid description","category":"Maintenance","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.650720300Z","updatedAt":"2026-10-14T18:34:22.650720300Z","version":0}
+POST /requests -> 201 {"id":6,"title":"Valid Lost Property","description":"Valid description","category":"Lost Property","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.663742400Z","updatedAt":"2026-10-14T18:34:22.663742400Z","version":0}
+POST /requests -> 201 {"id":7,"title":"Valid Other","description":"Valid description","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.676085200Z","updatedAt":"2026-10-14T18:34:22.676085200Z","version":0}
+--- TC-E-26: category missing, expect 400
+POST /requests -> 400
+--- TC-E-27: null, empty, blank category, expect 400
+POST /requests -> 400
+POST /requests -> 400
+POST /requests -> 400
+--- TC-E-28: not on the list, expect 400
+POST /requests -> 400
+POST /requests -> 400
+POST /requests -> 400
+POST /requests -> 400
+--- TC-E-29: title length 0, 1, 200, 201 (expect 0 and 201 rejected)
+POST /requests -> 400
+POST /requests -> 201 {"id":8,"title":"a","description":"Valid description","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.952123300Z","updatedAt":"2026-10-14T18:34:22.952123300Z","version":0}
+POST /requests -> 201 {"id":9,"title":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","description":"Valid description","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:22.966123300Z","updatedAt":"2026-10-14T18:34:22.966123300Z","version":0}
+POST /requests -> 400
+--- TC-E-12/13: list for the requester, then for staff
+GET /requests/mine -> 200 [{"id":9,"title":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","category":"Other","status":"Open","createdAt":"2026-10-14T18:34:22.966123Z"},{"id":8,"title":"a","category":"Other","status":"Open","createdAt":"2026-10-14T18:34:22.952123Z"},{"id":7,"title":"Valid Other","category":"Other","status":"Open","createdAt":"2026-10-14T18:34:22.676085Z"},{"id":6,"title":"Valid Lost Property","category":"Lost Property","status":"Open","createdAt":"2026-10-14T18:34:22.663742Z"},{"id":5,"title":"Valid Maintenance","category":"Maintenance","status":"Open","createdAt":"2026-10-14T18:34:22.650720Z"},{"id":4,"title":"Valid IT Support","category":"IT Support","status":"Open","createdAt":"2026-10-14T18:34:22.639723Z"},{"id":3,"title":"Valid Security Concern","category":"Security Concern","status":"Open","createdAt":"2026-10-14T18:34:22.626507Z"},{"id":2,"title":"Valid Damaged Equipment","category":"Damaged Equipment","status":"Open","createdAt":"2026-10-14T18:34:22.615509Z"},{"id":1,"title":"Valid Facility Fault","category":"Facility Fault","status":"Open","createdAt":"2026-10-14T18:34:22.585548Z"}]
+GET /requests/mine -> 200 []
+POST /requests -> 201 {"id":1,"title":"Fixture 1","description":"Owned by staff","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:43.336138700Z","updatedAt":"2026-10-14T18:34:43.336138700Z","version":0}
+POST /requests -> 201 {"id":2,"title":"Fixture 2","description":"Owned by someone else","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:43.368137300Z","updatedAt":"2026-10-14T18:34:43.368137300Z","version":0}
+POST /requests -> 201 {"id":3,"title":"Fixture 3","description":"Still open","category":"Other","status":"Open","submittedById":1,"createdAt":"2026-10-14T18:34:43.850043300Z","updatedAt":"2026-10-14T18:34:43.850043300Z","version":0}
+--- TC-E-16: illegal move (Assigned to Closed) by staff, expect 400
+POST /requests/1/status -> 400
+--- TC-E-17: requester changes status, expect 403
+POST /requests/1/status -> 403
+--- TC-E-18: staff who does not own request 2, expect 403
+POST /requests/2/status -> 403
+--- TC-E-21: unknown request, expect 404
+POST /requests/999/status -> 404
+--- TC-E-22: Open to Assigned through the status endpoint, expect 400
+POST /requests/3/status -> 400
+--- TC-E-15: owner moves request 1 to InProgress, expect 200 and version 1
+POST /requests/1/status -> 200 {"id":1,"status":"InProgress","version":1}
+--- TC-E-19: same version again, expect 409
+POST /requests/1/status -> 409
+--- TC-E-23: management moves request 1 to Resolved, expect 200
+POST /requests/1/status -> 200 {"id":1,"status":"Resolved","version":2}
