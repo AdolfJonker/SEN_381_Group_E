@@ -100,7 +100,7 @@ export async function acceptRequest(id, version) {
 export async function updateRequestStatus(id, status, version) {
   return apiRequest(`/requests/${id}/status`, {
     method: "POST",
-    body: JSON.stringify({ status, version }),
+    body: JSON.stringify({ toStatus: status, expectedVersion: version }),
   });
 }
 

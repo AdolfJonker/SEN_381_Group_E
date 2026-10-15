@@ -30,6 +30,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(status).body(ErrorResponse.of(message));
     }
 
+    /** Two people changed the same request at once (ADR-DATA-001): ask the user to reload. */
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleConflict(OptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

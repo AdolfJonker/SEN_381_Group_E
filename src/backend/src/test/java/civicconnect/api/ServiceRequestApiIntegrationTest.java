@@ -88,7 +88,7 @@ class ServiceRequestApiIntegrationTest {
                         .session(staff)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"status":"Closed","version":1}
+                                {"toStatus":"Closed","expectedVersion":1}
                                 """))
                 .andExpect(status().isBadRequest());
 
@@ -130,7 +130,7 @@ class ServiceRequestApiIntegrationTest {
                                         .session(threadStaff)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content("""
-                                                {"status":"InProgress","version":%d}
+                                                {"toStatus":"InProgress","expectedVersion":%d}
                                                 """.formatted(version)))
                                 .andReturn();
                         int code = result.getResponse().getStatus();

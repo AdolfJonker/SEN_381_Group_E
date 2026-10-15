@@ -5,7 +5,6 @@ import civicconnect.api.dto.CreateCommentBody;
 import civicconnect.api.dto.CreateRequestBody;
 import civicconnect.api.dto.RequestResponse;
 import civicconnect.api.dto.ServiceRequestDetailDto;
-import civicconnect.api.dto.UpdateStatusBody;
 import civicconnect.services.ServiceRequestService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Write paths for service requests (create, accept, status, comments).
+ * Write paths for service requests (create, accept, comments).
+ * Status changes live in {@link RequestStatusController}.
  * GET list / detail / summary live in {@link RequestViewController} (access-control slice).
  */
 @RestController
@@ -48,15 +48,6 @@ public class ServiceRequestController {
     ) {
         Integer version = body == null ? null : body.version();
         return requestService.accept(authentication.getName(), id, version);
-    }
-
-    @PostMapping("/{id}/status")
-    public ServiceRequestDetailDto updateStatus(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateStatusBody body,
-            Authentication authentication
-    ) {
-        return requestService.updateStatus(authentication.getName(), id, body.status(), body.version());
     }
 
     @PostMapping("/{id}/comments")

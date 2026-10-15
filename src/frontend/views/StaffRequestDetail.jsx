@@ -87,7 +87,10 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
             return;
         }
         await runAction(
-            () => updateRequestStatus(request.id, status, request.version),
+            async () => {
+                await updateRequestStatus(request.id, status, request.version);
+                return fetchRequest(requestId);
+            },
             `Status updated to ${formatStatus(status)}.`
         );
     }
