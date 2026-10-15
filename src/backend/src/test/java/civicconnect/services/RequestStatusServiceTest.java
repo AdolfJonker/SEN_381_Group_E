@@ -87,7 +87,7 @@ class RequestStatusServiceTest {
         verifyNoInteractions(auditLogObserver);
     }
 
-    @DisplayName("TC-E-15 a legal change updates the request, then records one history entry (NFR004, ADR-DATA-001 order)")
+    @DisplayName("TC-E-25 a legal change updates the request, then records one history entry (NFR004, ADR-DATA-001 order)")
     @Test
     void legalChangeUpdatesThenRecordsHistory() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -107,7 +107,7 @@ class RequestStatusServiceTest {
                 .record(request, RequestStatus.Assigned, RequestStatus.InProgress, staff, "Started work");
     }
 
-    @DisplayName("TC-E-16 an illegal change is rejected with 400 and writes nothing (RISK-011)")
+    @DisplayName("TC-E-26 an illegal change is rejected with 400 and writes nothing (RISK-011)")
     @Test
     void illegalChangeWritesNothing() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -124,7 +124,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-17 a requester may not change status: 403 and nothing is written (FR011, NFR003)")
+    @DisplayName("TC-E-27 a requester may not change status: 403 and nothing is written (FR011, NFR003)")
     @Test
     void requesterIsForbiddenAndNothingIsWritten() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -141,7 +141,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-18 staff who do not own the request are forbidden: 403 and nothing is written (D2)")
+    @DisplayName("TC-E-28 staff who do not own the request are forbidden: 403 and nothing is written (D2)")
     @Test
     void staffWhoDoNotOwnTheRequestAreForbidden() {
         User owner = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -157,7 +157,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-19 a stale version is rejected with 409 and nothing is written (ADR-DATA-001)")
+    @DisplayName("TC-E-29 a stale version is rejected with 409 and nothing is written (ADR-DATA-001)")
     @Test
     void staleVersionIsAConflict() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -173,7 +173,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-20 if the update fails at flush, no history entry is written (ADR-DATA-001)")
+    @DisplayName("TC-E-30 if the update fails at flush, no history entry is written (ADR-DATA-001)")
     @Test
     void failedUpdateWritesNoHistory() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -189,7 +189,7 @@ class RequestStatusServiceTest {
         verifyNoInteractions(auditLogObserver);
     }
 
-    @DisplayName("TC-E-21 an unknown request is 404 and nothing is written")
+    @DisplayName("TC-E-31 an unknown request is 404 and nothing is written")
     @Test
     void unknownRequestIsNotFound() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -203,7 +203,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-22 assigning is not done here: 400 points to the assign action (FR008 is separate)")
+    @DisplayName("TC-E-32 assigning is not done here: 400 points to the assign action (FR008 is separate)")
     @Test
     void assigningIsHandledElsewhere() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
@@ -219,7 +219,7 @@ class RequestStatusServiceTest {
         assertNothingWritten();
     }
 
-    @DisplayName("TC-E-23 management may move any request forward, and the history shows who did it (D6)")
+    @DisplayName("TC-E-33 management may move any request forward, and the history shows who did it (D6)")
     @Test
     void managementMayMoveAnyRequestForward() {
         User staff = user(5L, "staff@civicconnect.local", Role.Staff);
