@@ -34,6 +34,6 @@ public class ApiExceptionHandler {
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleConflict(OptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorResponse.of("This request was changed by someone else. Reload and try again."));
+                .body(ErrorResponse.of("This request was updated by someone else. Reload and try again."));
     }
 }

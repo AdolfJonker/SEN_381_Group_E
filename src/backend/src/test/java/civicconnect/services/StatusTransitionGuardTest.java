@@ -93,16 +93,17 @@ class StatusTransitionGuardTest {
     }
 
     // -------------------------------------------------------------------------
-    // New permission tests (D2–D6)
+    // Permission tests (D2–D6). IDs TC-E-15.. reserved with Elcke so they do not
+    // collide with evidence-file cases TC-E-04..TC-E-11 (history / categories).
     // -------------------------------------------------------------------------
 
-    @DisplayName("TC-E-04 Staff may assign an Open request")
+    @DisplayName("TC-E-15 Staff may assign an Open request")
     @Test
     void staffMayAssignOpenRequest() {
         assertTrue(guard.canPerformTransition(Open, Assigned, "Staff", false));
     }
 
-    @DisplayName("TC-E-05 Staff who is not the assignee may not move Assigned/InProgress/Resolved")
+    @DisplayName("TC-E-16 Staff who is not the assignee may not move Assigned/InProgress/Resolved")
     @ParameterizedTest(name = "{0} to {1}")
     @CsvSource({
             "Assigned,InProgress",
@@ -113,7 +114,7 @@ class StatusTransitionGuardTest {
         assertFalse(guard.canPerformTransition(from, to, "Staff", false));
     }
 
-    @DisplayName("TC-E-06 Assigned Staff may advance their own request")
+    @DisplayName("TC-E-17 Assigned Staff may advance their own request")
     @ParameterizedTest(name = "{0} to {1}")
     @CsvSource({
             "Assigned,InProgress",
@@ -124,7 +125,7 @@ class StatusTransitionGuardTest {
         assertTrue(guard.canPerformTransition(from, to, "Staff", true));
     }
 
-    @DisplayName("TC-E-07 Management may perform any legal transition")
+    @DisplayName("TC-E-18 Management may perform any legal transition")
     @ParameterizedTest(name = "{0} to {1}")
     @CsvSource({
             "Open,Assigned",
@@ -137,14 +138,14 @@ class StatusTransitionGuardTest {
         assertTrue(guard.canPerformTransition(from, to, "Management", true));
     }
 
-    @DisplayName("TC-E-08 Requester may never change status")
+    @DisplayName("TC-E-19 Requester may never change status")
     @Test
     void requesterMayNeverChangeStatus() {
         assertFalse(guard.canPerformTransition(Open, Assigned, "Requester", false));
         assertFalse(guard.canPerformTransition(Assigned, InProgress, "Requester", true));
     }
 
-    @DisplayName("TC-E-09 Illegal transition is rejected even for Management")
+    @DisplayName("TC-E-20 Illegal transition is rejected even for Management")
     @Test
     void illegalTransitionRejectedEvenForManagement() {
         assertFalse(guard.canPerformTransition(Open, Closed, "Management", false));

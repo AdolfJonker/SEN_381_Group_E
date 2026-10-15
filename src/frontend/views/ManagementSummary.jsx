@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchRequests, fetchSummary } from "../services/client.js";
 import { CATEGORIES, STATUSES, STATUS_LABELS } from "../services/requestOptions.js";
-import { applyFilters, sortByDate } from "../services/requestFilters.js";
 import RequestTable from "./RequestTable.jsx";
 import "../styles/views.css";
 
-/**Management landing view.*/
+/** Management landing view (FR012, FR013). Summary and filtered list come from the server. */
 
 export default function ManagementSummary({ onSelect }) {
   const [summary, setSummary] = useState(null);
@@ -32,10 +31,11 @@ export default function ManagementSummary({ onSelect }) {
     };
   }, [reloadKey]);
 
-  // Request list. Reloaded when a filter changes.
+  // Request list with server-side FR013 filters.
   useEffect(() => {
     let ignore = false;
-    fetchRequests({ status, category })
+    setLoading(true);
+    fetchRequests({ status, category, sort: sortDir })
       .then((data) => {
         if (!ignore) setRequests(data);
       })
@@ -48,12 +48,7 @@ export default function ManagementSummary({ onSelect }) {
     return () => {
       ignore = true;
     };
-  }, [status, category, reloadKey]);
-
-  const visible = useMemo(
-    () => sortByDate(applyFilters(requests, { status, category }), sortDir),
-    [requests, status, category, sortDir]
-  );
+  }, [status, category, sortDir, reloadKey]);
 
   const total = summary
     ? summary.open + summary.assigned + summary.inProgress + summary.resolved + summary.closed
@@ -124,7 +119,7 @@ export default function ManagementSummary({ onSelect }) {
             <p className="muted view-sub" aria-live="polite">
               {loading
                 ? "Loading requests…"
-                : `Showing ${visible.length}${total !== null ? ` of ${total}` : ""} requests${
+                : `Showing ${requests.length}${total !== null ? ` of ${total}` : ""} requests${
                     hasFilter ? " (filtered)" : ""
                   }.`}
             </p>
@@ -181,7 +176,7 @@ export default function ManagementSummary({ onSelect }) {
 
         {loading ? null : (
           <RequestTable
-            requests={visible}
+            requests={requests}
             onSelect={onSelect}
             emptyText={hasFilter ? "No requests match these filters." : "There are no requests yet."}
           />

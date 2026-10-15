@@ -38,7 +38,7 @@ public class StatusHistory {
     @JoinColumn(name = "changed_by_id", nullable = false)
     private User changedBy;
 
-    @Column(name = "timestamp", nullable = false)
+    @Column(name = "changed_at", nullable = false)
     private Instant changedAt = Instant.now();
 
     @Column(columnDefinition = "TEXT")

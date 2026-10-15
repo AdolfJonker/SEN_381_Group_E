@@ -67,11 +67,10 @@ export async function createRequest({ title, description, category }) {
   });
 }
 
+/** Requester list (FR003) — GET /requests/mine */
 export async function fetchMyRequests() {
   return apiRequest("/requests/mine");
 }
-
-// ----- Request views (FR005, FR012, FR013) -----
 
 function toQuery(params = {}) {
   const query = new URLSearchParams();
@@ -82,14 +81,34 @@ function toQuery(params = {}) {
   return text ? `?${text}` : "";
 }
 
-/**FR005: requests the signed-in role may see (the server applies the role's strategy).*/
-
+/** Staff / management list (FR005) — GET /requests. The server applies the role's strategy. */
 export async function fetchRequests(filters = {}) {
   return apiRequest(`/requests${toQuery(filters)}`);
 }
 
 export async function fetchRequest(id) {
   return apiRequest(`/requests/${id}`);
+}
+
+export async function acceptRequest(id, version) {
+  return apiRequest(`/requests/${id}/accept`, {
+    method: "POST",
+    body: JSON.stringify({ version }),
+  });
+}
+
+export async function updateRequestStatus(id, status, version) {
+  return apiRequest(`/requests/${id}/status`, {
+    method: "POST",
+    body: JSON.stringify({ toStatus: status, expectedVersion: version }),
+  });
+}
+
+export async function addRequestComment(id, content) {
+  return apiRequest(`/requests/${id}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
 }
 
 /** FR012: Management only. Other roles get 403. */

@@ -4,6 +4,7 @@ import SubmitRequest from "./views/SubmitRequest.jsx";
 import MyRequests from "./views/MyRequests.jsx";
 import ManagementSummary from "./views/ManagementSummary.jsx";
 import StaffRequestList from "./views/StaffRequestList.jsx";
+import StaffRequestDetail from "./views/StaffRequestDetail.jsx";
 import { fetchCurrentUser, logout } from "./services/client.js";
 import { landingViewFor } from "./services/roleLanding.js";
 
@@ -11,6 +12,7 @@ export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [screen, setScreen] = useState("home");
+    const [selectedRequestId, setSelectedRequestId] = useState(null);
 
     useEffect(() => {
         fetchCurrentUser()
@@ -54,9 +56,14 @@ export default function App() {
                         className="btn-outline"
                         style={{ marginLeft: "1rem", padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
                         onClick={async () => {
-                            await logout();
+                            try {
+                                await logout();
+                            } catch {
+                                // The session may already have ended.
+                            }
                             setUser(null);
                             setScreen("home");
+                            setSelectedRequestId(null);
                         }}
                     >
                         Sign out
@@ -71,7 +78,10 @@ export default function App() {
                         type="button"
                         className="nav-link"
                         aria-current={screen === s.id ? "page" : undefined}
-                        onClick={() => setScreen(s.id)}
+                        onClick={() => {
+                            setScreen(s.id);
+                            setSelectedRequestId(null);
+                        }}
                     >
                         {s.label}
                     </button>
@@ -84,7 +94,12 @@ export default function App() {
                 ) : screen === "mine" && isRequester ? (
                     <MyRequests onSubmitClick={() => setScreen("submit")} />
                 ) : (
-                    <RoleLanding user={user} />
+                    <RoleLanding
+                        user={user}
+                        selectedRequestId={selectedRequestId}
+                        onSelectRequest={setSelectedRequestId}
+                        onClearSelection={() => setSelectedRequestId(null)}
+                    />
                 )}
             </main>
         </div>
@@ -95,12 +110,24 @@ export default function App() {
  * Role-based landing view (NFR003). The role comes from the server (/auth/me).
  * Hiding screens here is for usability only; the server checks every request.
  */
-function RoleLanding({ user }) {
-    switch (landingViewFor(user.role)) {
+function RoleLanding({ user, selectedRequestId, onSelectRequest, onClearSelection }) {
+    const landing = landingViewFor(user.role);
+
+    if ((landing === "staff-list" || landing === "management-summary") && selectedRequestId != null) {
+        return (
+            <StaffRequestDetail
+                requestId={selectedRequestId}
+                currentUserId={user.id}
+                onBack={onClearSelection}
+            />
+        );
+    }
+
+    switch (landing) {
         case "management-summary":
-            return <ManagementSummary />;
+            return <ManagementSummary onSelect={onSelectRequest} />;
         case "staff-list":
-            return <StaffRequestList />;
+            return <StaffRequestList onSelect={onSelectRequest} />;
         case "my-requests":
             // Requester home: welcome card. "My requests" and "Submit a request" are in the nav (Elcke's screens).
             return (
