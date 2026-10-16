@@ -7,12 +7,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**TC-BB-DT-01: decision table for FR011 ("only authorised staff can set Resolved or Closed").*/
+/**TC-D-05: decision table for FR011 ("only authorised staff can set Resolved or Closed").*/
 class StatusAuthorityDecisionTableTest {
 
     private final StatusTransitionGuard guard = new StatusTransitionGuard();
 
-    @DisplayName("TC-BB-DT-01 FR011 decision table")
+    @DisplayName("TC-D-05 FR011 decision table")
     @ParameterizedTest(name = "R{0}: {1}, assigned={2}, {3} -> {4} => allowed={5}")
     @CsvSource({
             // rule, role,       assigned, from,       to,       allowed
