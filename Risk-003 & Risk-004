@@ -1,14 +1,16 @@
 RISK-003 RBAC implemented incorrectly
 
 Evidence (M3): the M2 demo code allowed every route (permitAll) and trusted a user id sent by the browser.
-Mitigation now in place: login is session based (AuthService). SecurityConfig returns 401 when not signed in and checks the role per route (summary = Management, submit = Requester). Each role has its own FilterStrategy, and RequestListService picks it from the role, so the rows each role sees are limited in one place (FR005). Each role is tested on its own: TC-UNIT-RBAC-01 to 04, TC-API-SEC-02 to 04, and the FR011 decision table TC-BB-DT-01.
-Residual: a new route could be added without a role rule. Unknown routes default to "signed in" or "deny all".
+Mitigation now in place: login is session based (AuthService). SecurityConfig returns 401 when not signed in and checks the role per route (summary = Management, submit = Requester). Each role has its own FilterStrategy, and RequestListService picks it from the role, so the rows each role sees are limited in one place (FR005). Each role is tested on its own: TC-D-01 to 04, TC-D-INT-02 to 04, and the FR011 decision table TC-D-05.
+Residual: a new route could be added without a role rule. Unknown `/api/v1` routes default to "signed in". Routes outside `/api/v1` are open so the React app can be served from the jar (TD-007).
+Check 15/10/2026: signed-out calls to `/requests/mine`, `/requests/{id}` and `/requests/{id}/status` return 401 on main (TC-D-INT-01c). The 403 in Elcke's live check (14/10) was recorded on code from before the 401 rule was merged.
 Prob: Low. Impact: High. Priority: Medium. Status: Mitigating.
 
 RISK-004 Sensitive data exposed
 
 Evidence (M3): the M2 demo code had a public /api/users list with every email.
-Mitigation now in place: every /api/v1 route except health and login needs a signed-in user. Passwords are BCrypt hashes. Five failed logins lock the email for 15 minutes. The session cookie is HttpOnly and SameSite=Strict. A requester gets 403 for another requester's request (TC-API-SEC-03). A secrets scan (gitleaks) runs in CI.
+Mitigation now in place: every /api/v1 route except health and login needs a signed-in user. Passwords are BCrypt hashes. Five failed logins lock the email for 15 minutes. The session cookie is HttpOnly and SameSite=Strict. A requester gets 403 for another requester's request (TC-D-INT-03). A secrets scan (gitleaks) runs in CI.
 Residual: DemoUserLoader creates three demo accounts with the same known password on every profile, including postgres, and the login screen shows that password. On staging, anyone could sign in as Management.
 Action: only create demo users on the demo profile, or read the password from an environment variable. [Team to agree; DemoUserLoader is in the bootstrap code.]
+Check 15/10/2026: DemoUserLoader on main is still a plain @Component (all profiles). The E2E tests also log in with this password. This must be fixed before the Render staging URL is public, or staging must be kept private.
 Prob: Medium (until the action is done). Impact: High. Priority: High. Status: Open.
