@@ -11,7 +11,7 @@ const rows = [
 ];
 const ids = (list) => list.map((r) => r.id);
 
-// TC-UI-02 (FR013, FR006): equivalence partitions for the filters.
+// TC-D-07 (FR013, FR006): equivalence partitions for the filters.
 describe("applyFilters", () => {
   it("returns everything when no filter is set", () => {
     assert.deepEqual(ids(applyFilters(rows)), [1, 2, 3, 4]);

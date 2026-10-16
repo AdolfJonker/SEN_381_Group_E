@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
-/**TC-UNIT-RBAC-04: the service picks the right strategy for each role (FR005, ADR-DESIGN-002).*/
+/**TC-D-04: the service picks the right strategy for each role (FR005, ADR-DESIGN-002).*/
 class RequestListServiceTest {
 
     private final ServiceRequestRepository requests = mock(ServiceRequestRepository.class);
@@ -29,7 +29,7 @@ class RequestListServiceTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-04a each role resolves to its own strategy")
+    @DisplayName("TC-D-04a each role resolves to its own strategy")
     void eachRoleGetsItsStrategy() {
         RequestListService service = serviceWith(List.of(
                 new ManagementFilterStrategy(requests),
@@ -43,7 +43,7 @@ class RequestListServiceTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-04b a role with no strategy is refused (fail closed)")
+    @DisplayName("TC-D-04b a role with no strategy is refused (fail closed)")
     void missingStrategyIsForbidden() {
         RequestListService service = serviceWith(List.of(new RequesterFilterStrategy(requests)));
 
@@ -54,7 +54,7 @@ class RequestListServiceTest {
     }
 
     @Test
-    @DisplayName("TC-UNIT-RBAC-04c two strategies for one role stop the app starting")
+    @DisplayName("TC-D-04c two strategies for one role stop the app starting")
     void duplicateStrategyIsRejected() {
         assertThrows(IllegalStateException.class, () -> serviceWith(List.of(
                 new RequesterFilterStrategy(requests),

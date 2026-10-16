@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Staff visibility for accept path (FR008 / RTM-008 only): Open requests for all staff; assigned only for the owner.
- * TC-A-08/09 complement TC-UNIT-RBAC-02. Access-control owns FR005 / RTM-005.
+ * TC-A-08/09 complement TC-D-02. Access-control owns FR005 / RTM-005.
  * Do not map these IDs to RTM-005.
  */
 @ExtendWith(MockitoExtension.class)
