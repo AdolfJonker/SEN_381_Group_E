@@ -3,12 +3,12 @@
 | Field             | Value                                                                                                                                                                                         |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Owner             | Elcke Van Der Berg                                                                                                                                                                            |
-| Covers            | FR001, FR003, FR008, FR009, FR011, NFR003, NFR004 (RTM-001, RTM-003, RTM-008, RTM-009, RTM-011, RTM-016, RTM-017)                                                                             |
+| Covers            | FR001, FR003, FR004, FR008, FR009, FR011, NFR001, NFR003, NFR004, NFR005 (RTM-001, RTM-003, RTM-004, RTM-008, RTM-009, RTM-011, RTM-016, RTM-017)                                              |
 | Issue             | #82                                                                                                                                                                                           |
-| Code baselines    | A: main at 2f970a1 (guard, permission and requester list tests). B: feature/audit-log-observer at fa8598e (PR #115). E: feature/fr001-automated-tests (#119)                                  |
-| Document status   | Results recorded for baselines A, B and E. Database level tests not run. FR001 rules covered by automated tests on #119                                                                       |
+| Code baselines    | A: main at 2f970a1. B: feature/audit-log-observer at fa8598e (#115). E: feature/fr001-automated-tests (#119). F: feature/requester-live-status at 19ceeec (FR004/NFR001)                       |
+| Document status   | Results recorded for A, B, E and F. Database level tests not run. FR004/NFR001 demo and 375 px recheck recorded 18/10/2026                                                                     |
 | Release candidate | To be confirmed at evidence freeze                                                                                                                                                            |
-| Last updated      | 15/10/2026                                                                                                                                                                                    |
+| Last updated      | 18/10/2026                                                                                                                                                                                    |
 
 ## 1. Purpose and scope
 
@@ -31,6 +31,7 @@ This record maps each test to its requirement, states the expected result, and r
 | C   | Manual API check on the code of run B, local PostgreSQL | All calls as expected, see section 7 | 14/10/2026 |
 | D   | Deliberate fault checks on the code of run B            | Each fault detected, see section 6   | 14/10/2026 |
 | E   | feature/fr001-automated-tests (#119)                    | 15 new tests, 0 failures             | 15/10/2026 |
+| F   | feature/requester-live-status at 19ceeec                | Demo + 6 unit tests pass             | 18/10/2026 |
 | CI  | Workflow added in PR #112                               | Run reference to add                 |            |
 
 ## 4. Summary
@@ -69,7 +70,7 @@ This record maps each test to its requirement, states the expected result, and r
 | TC-E-29  | Title length 0, 1, 200 and 201 + trim behaviour                                             | Boundary value analysis  | Unit            | FR001                  | RTM-001          | Pass (automated)                            | E    |
 | TC-E-30  | Legal change persists request and history together in PostgreSQL                            | Persistence              | Database        | NFR004, ASR-02         | RTM-017          | Not run                                     |      |
 | TC-E-31  | Rejected change writes zero history rows in PostgreSQL                                      | Negative                 | Database        | NFR004, ASR-03         | RTM-009, RTM-017 | Not run                                     |      |
-| TC-E-32  | Notification failure does not undo a saved change                                           | Failure                  | Service (mocks) | ADR-DATA-001, RISK-007 | RTM-004          | Not run (StatusVisibilityUpdater not built) |      |
+| TC-E-32  | Status visible on My Requests within 5 seconds after a staff change (poll every 4s) | Observation / timed demo | Frontend | FR004, NFR001 | RTM-004 | Pass (manual demo) | F |
 
 Automated tests for TC-E-25 to TC-E-29 were added in PR #119 (15 tests, all passing).
 
@@ -109,7 +110,7 @@ Automated tests for TC-E-25 to TC-E-29 were added in PR #119 (15 tests, all pass
 | TC-E-29  | Title length 0, 1, 200, 201 + trim behaviour                           | Pass                                                                                         | CreateRequestBodyValidationTest (#119)                                   | Limit is 200 characters; trim happens before the check                        |
 | TC-E-30  | Both rows saved in one transaction                                     | Not run                                                                                      |                                                                          | Needs a PostgreSQL test. Supporting evidence in section 7                     |
 | TC-E-31  | No history row after a rejection                                       | Not run                                                                                      |                                                                          | Supporting evidence in section 7                                              |
-| TC-E-32  | Saved change stays saved                                               | Not run                                                                                      |                                                                          | Only if NFR001 stays in scope                                                 |
+| TC-E-32  | Status badge/banner updates on My Requests within ~5s after staff change | Pass (manual demo ~4s). Unit: 6/6 pass | statusChanges.test.js + two-window demo (section 11) | FR004/NFR001 in scope; poll every 4s |
 
 ## 6. Deliberate fault checks (run D)
 
@@ -154,15 +155,12 @@ Limits: the check was manual, ran once on local demo data, and cannot be repeate
 
 ## 8. Decisions
 
-Closed:
-* D2 to D6 are recorded in docs/desicions/D2-D6-status-transition-authority.md (PR #101).
-* Category matching is exact labels only (TC-E-28).
-* The title limit is 200 characters (TC-E-29).
-
 Open:
 * Whether creating a request writes an initial Open history row.
 * The database test approach (Testcontainers or a PostgreSQL service in CI). TC-E-30 and TC-E-31 depend on it.
-* Whether NFR001 and StatusVisibilityUpdater stay in scope (TC-E-32).
+
+Closed (18/10/2026):
+* NFR001 / FR004 stay in scope. Implemented as 4-second polling on My Requests (feature/requester-live-status).
 
 ## 9. Observations and defect candidates
 
@@ -178,3 +176,20 @@ Open:
 * Run B covers PR #115. These rows should be re-run on main after it merges.
 * Runs were made on a developer machine. The CI run reference is still to be added.
 * Mockito prints a self-attaching warning under Java 25/26. It is a warning and does not affect results.
+
+## 11. NFR005 and FR004 / NFR001 checks (run F — 18/10/2026)
+
+### 375 px (NFR005 / DEF-E01)
+* Date: 18/10/2026
+* Tool: Chrome DevTools, 375 px width
+* Screens: Submission form, My requests (with live status refresh)
+* Result: No horizontal scroll on either screen
+* Status: Pass — DEF-E01 remains Fixed
+
+### Live status refresh (FR004 / NFR001)
+* Branch: feature/requester-live-status (commit 19ceeec)
+* Implementation: poll GET /requests/mine every 4 seconds; pure helper `detectStatusChanges`; info banner when status changes
+* Unit tests: `statusChanges.test.js` — 6 cases, all pass (npm test: 17 pass, 0 fail)
+* Demo: two windows (requester on My requests + staff status change) against local PostgreSQL
+* Result: status badge and banner updated within about 4 seconds
+* Status: Implemented; PR open for review
