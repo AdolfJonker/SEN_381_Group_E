@@ -1,3 +1,9 @@
 spring:
   profiles:
     active: demo
+
+# Tests run on the demo profile with the demo accounts (RISK-004: they are off by default elsewhere).
+civicconnect:
+  demo-users:
+    enabled: true
+    password: Password123!
