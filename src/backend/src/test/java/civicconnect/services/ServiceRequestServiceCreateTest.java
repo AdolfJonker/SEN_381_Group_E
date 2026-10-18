@@ -2,6 +2,7 @@ package civicconnect.services;
 
 import civicconnect.api.dto.CreateRequestBody;
 import civicconnect.api.dto.RequestResponse;
+import civicconnect.observers.AuditLogObserver;
 import civicconnect.records.RequestStatus;
 import civicconnect.records.ServiceRequest;
 import civicconnect.records.User;
@@ -31,6 +32,9 @@ class ServiceRequestServiceCreateTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private AuditLogObserver auditLogObserver;
+
     @InjectMocks
     private ServiceRequestService service;
 
@@ -42,10 +46,13 @@ class ServiceRequestServiceCreateTest {
     }
 
     @Test
-    @DisplayName("TC-E-07 Valid category is accepted and request is saved")
+    @DisplayName("TC-E-07 Valid category is accepted and request is saved with initial history")
     void validCategoryIsAccepted() {
+        User requester = requester();
+
         when(userRepository.findByEmail("requester@civicconnect.local"))
-                .thenReturn(Optional.of(requester()));
+                .thenReturn(Optional.of(requester));
+
         when(requestRepository.save(any(ServiceRequest.class)))
                 .thenAnswer(inv -> {
                     ServiceRequest r = inv.getArgument(0);
@@ -53,34 +60,68 @@ class ServiceRequestServiceCreateTest {
                     return r;
                 });
 
-        CreateRequestBody body = new CreateRequestBody("Broken tap", "Dripping", "Maintenance");
-        RequestResponse result = service.create("requester@civicconnect.local", body);
+        CreateRequestBody body =
+                new CreateRequestBody("Broken tap", "Dripping", "Maintenance");
+
+        RequestResponse result =
+                service.create("requester@civicconnect.local", body);
 
         assertEquals(42L, result.id());
-        ArgumentCaptor<ServiceRequest> captor = ArgumentCaptor.forClass(ServiceRequest.class);
+
+        ArgumentCaptor<ServiceRequest> captor =
+                ArgumentCaptor.forClass(ServiceRequest.class);
+
         verify(requestRepository).save(captor.capture());
-        assertEquals("Maintenance", captor.getValue().getCategory());
-        assertEquals(RequestStatus.Open, captor.getValue().getStatus());
+
+        ServiceRequest savedRequest = captor.getValue();
+
+        assertEquals("Maintenance", savedRequest.getCategory());
+        assertEquals(RequestStatus.Open, savedRequest.getStatus());
+
+        verify(auditLogObserver).record(
+                savedRequest,
+                null,
+                RequestStatus.Open,
+                requester,
+                "Initial status"
+        );
     }
 
     @Test
     @DisplayName("TC-E-10 Category not on the list is rejected")
     void unknownCategoryIsRejected() {
-        CreateRequestBody body = new CreateRequestBody("Broken tap", "Dripping", "Plumbing");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.create("requester@civicconnect.local", body));
+        CreateRequestBody body =
+                new CreateRequestBody("Broken tap", "Dripping", "Plumbing");
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> service.create("requester@civicconnect.local", body)
+        );
+
         assertEquals(400, ex.getStatusCode().value());
         assertTrue(ex.getReason().contains("category"));
+
         verify(requestRepository, never()).save(any());
+        verifyNoInteractions(auditLogObserver);
     }
 
     @Test
     @DisplayName("Unknown user is rejected with 401")
     void unknownUserIsRejected() {
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
-        CreateRequestBody body = new CreateRequestBody("Broken tap", "Dripping", "Maintenance");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.create("unknown@example.com", body));
+        when(userRepository.findByEmail("unknown@example.com"))
+                .thenReturn(Optional.empty());
+
+        CreateRequestBody body =
+                new CreateRequestBody("Broken tap", "Dripping", "Maintenance");
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> service.create("unknown@example.com", body)
+        );
+
         assertEquals(401, ex.getStatusCode().value());
+
+        verify(requestRepository, never()).save(any());
+        verifyNoInteractions(auditLogObserver);
     }
 }
