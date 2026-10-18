@@ -1,9 +1,9 @@
 # PED v3.0 — Adolf paste pack (sections 2, 3, 4, 8 + submission block)
 
 Copy each block into the matching Word PED section, then compile PDF.  
-Authority: [SEN381_M3.pdf](../../SEN381_M3.pdf) — real cloud staging optional; simulated staging acceptable.
+Authority: [SEN381_M3.pdf](../../../SEN381_M3.pdf) — real cloud staging optional; simulated staging acceptable.
 
-Source drafts also live in [`docs/m3-adolf-sections.md`](../m3-adolf-sections.md). Evidence: [`docs/testing/adolf-test-evidence.md`](../testing/adolf-test-evidence.md).
+Source drafts also live in [`docs/PED/contributions/m3-adolf-sections.md`](m3-adolf-sections.md). Evidence: [`docs/testing/adolf-test-evidence.md`](../../testing/adolf-test-evidence.md).
 
 ---
 

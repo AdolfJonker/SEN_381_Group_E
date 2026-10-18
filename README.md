@@ -4,7 +4,9 @@ CivicConnect is a campus service-request system. Requesters submit facility, equ
 
 This repository holds both the engineering documentation (Project Engineering Document, ADRs, RTM, risks) and the application code (Spring Boot backend + React frontend).
 
-**Current status (Milestone 2):** the architecture, technology and initial design baseline is accepted (PED v2.0). A runnable demo backend and frontend exist. Several design decisions are still being translated into code; see [Known limitations](#known-limitations).
+**Current status (Milestone 4):** M3 release candidate tagged `v3.0.0-rc1`; M4 release freeze (`v4.0.0`) in progress. See [Known limitations](#known-limitations).
+
+All engineering documentation lives under [`docs/`](docs/README.md); start at the [documentation index](docs/README.md).
 
 ## Team
 
@@ -20,33 +22,31 @@ All three share Criterion F (development, documentation and GitHub evidence).
 
 ```text
 .
-├── backend/demo/                  Spring Boot API (Java 25, Maven wrapper)
-│   ├── src/main/java/com/example/demo/
-│   │   ├── config/                Security config, demo data loader
-│   │   ├── domain/                Entities + enums (ServiceRequest, StatusHistory, Comment, UserAccount, RequestStatus, …)
-│   │   ├── repo/                  Spring Data JPA repositories
-│   │   ├── service/               ServiceRequestService (transactions, role checks, status transitions)
-│   │   └── web/                   REST controllers, DTOs, error handler
-│   ├── src/main/resources/
-│   │   ├── application*.properties   demo (H2) and postgres profiles
-│   │   └── db/migration/V1__init_schema.sql   Flyway schema
-│   └── README.md                  Backend setup, demo users, endpoints
-├── Frontend/                      React + Vite single-page app
-│   └── src/                       api/client.js, components/, data/
-├── docs/
-│   ├── PED/                       Project Engineering Document (v1.0 and v2.0) + version history
-│   ├── adr/                       Architecture Decision Records
-│   ├── architecture/              C4 Context and Container diagrams
+├── src/
+│   ├── backend/                   Spring Boot API (Java 25, Maven wrapper); layout in src/README.md
+│   └── frontend/                  React + Vite single-page app
+├── e2e/                           Playwright end-to-end tests
+├── scripts/                       perf-list.mjs (list performance check)
+├── docs/                          All engineering documentation — see docs/README.md
+│   ├── PED/                       PED versions, version history, member contributions
 │   ├── requirements/              Functional / non-functional requirements, RTM
-│   ├── risk/                      Risk register, engineering decision log, forward engineering considerations
-│   ├── desicions/                 M1 baseline review (controlled change check)
-│   └── governance/                AI usage register, baseline sign-off, team working agreement
-└── .github/pull_request_template.md
+│   ├── architecture/              C4 Context and Container diagrams
+│   ├── adr/                       Architecture Decision Records
+│   ├── design/                    Design problems (PED §6) and UI design
+│   ├── data/                      Entity model, access patterns, transactions, SPOF notes
+│   ├── decisions/                 Engineering decision log, D2–D6, M1 baseline review
+│   ├── risk/                      Risk register, technical debt, forward engineering
+│   ├── testing/                   Quality strategy, test evidence, defects, screenshots
+│   ├── staging/                   Simulated staging, demo prep, rollback, optional Render
+│   ├── release/                   Release evidence summaries, M3 close-out
+│   └── governance/                AI usage register, baseline sign-off, team agreement
+├── Dockerfile, render.yaml        Optional cloud staging
+└── .github/                       CI workflow, PR template
 ```
 
 ## Technology stack
 
-Versions are taken from `backend/demo/pom.xml`, `Frontend/package.json` / `package-lock.json` and the Maven wrapper. The decision and its rationale are in [ADR-TECH-001](docs/adr/ADR-TECH-001.md).
+Versions are taken from `src/backend/pom.xml`, `src/frontend/package.json` / `package-lock.json` and the Maven wrapper. The decision and its rationale are in [ADR-TECH-001](docs/adr/ADR-TECH-001.md).
 
 | Layer | Technology | Version in repo |
 |---|---|---|
@@ -62,32 +62,25 @@ Versions are taken from `backend/demo/pom.xml`, `Frontend/package.json` / `packa
 
 ## Quick start
 
-1. **Backend**: see [`backend/demo/README.md`](backend/demo/README.md). In short: JDK 25, then `./mvnw spring-boot:run` from `backend/demo` (API on `http://localhost:8081/api`, in-memory H2 with demo data).
-2. **Frontend**: from `Frontend/`, run `npm install` then `npm run dev`, and open the URL Vite prints. The UI calls the API at `http://localhost:8081/api` (override with the `VITE_API_BASE` environment variable).
-3. Pick a demo role (Requester, Staff or Management) on the login screen.
+1. **Backend** (JDK 25): from `src/backend`, set `SPRING_PROFILES_ACTIVE=demo` and `SERVER_PORT=8081`, then run `./mvnw spring-boot:run` (in-memory H2 with demo data). PostgreSQL setup: [`src/README.md`](src/README.md).
+2. **Frontend**: from `src/frontend`, run `npm install` then `npm run dev`, and open `http://127.0.0.1:5173`. Vite proxies `/api/v1` to `http://localhost:8081`.
+3. Sign in as a demo user (Requester, Staff or Management). Full walkthrough: [`docs/staging/demo-prep.md`](docs/staging/demo-prep.md).
 
-Tests: `./mvnw test` in `backend/demo`.
+Tests: `./mvnw verify` in `src/backend`.
 
 ## Engineering documentation
 
+The full list, grouped by topic, is in the [documentation index](docs/README.md). The most-used artefacts:
+
 | Artefact | Path |
 |---|---|
-| PED v2.0 (M2, accepted baseline + sign-off) | [`docs/PED/SEN381_Project_M2_draft.docx`](docs/PED/SEN381_Project_M2_draft.docx) |
-| PED v1.0 (M1 baseline) | [`docs/PED/PED_v1.0.docx`](docs/PED/PED_v1.0.docx) |
-| Version history | [`docs/PED/version-history.md`](docs/PED/version-history.md) |
-| ADR-ARCH-001 — Modular monolith | [`docs/adr/ADR-ARCH-001.md`](docs/adr/ADR-ARCH-001.md) |
-| ADR-TECH-001 — Technology stack | [`docs/adr/ADR-TECH-001.md`](docs/adr/ADR-TECH-001.md) |
-| ADR-DATA-001 — Atomic transaction + optimistic concurrency | [`docs/adr/ADR-DATA-001`](docs/adr/ADR-DATA-001) |
-| ADR-DESIGN-001 — Status transition guard + Observer | [`docs/adr/ADR-DESIGN-001-status-transition-observer.md`](docs/adr/ADR-DESIGN-001-status-transition-observer.md) |
-| ADR-DESIGN-002 — Strategy-per-role filtering | [`docs/adr/ADR-DESIGN-002-rbac-strategy.md`](docs/adr/ADR-DESIGN-002-rbac-strategy.md) |
-| ADR-INT-001 — In-process observer seam | [`Initial Integration Decision`](Initial%20Integration%20Decision) (repo root) |
-| C4 Context diagram | [`docs/architecture/civicconnect-c4-context.jpg`](docs/architecture/civicconnect-c4-context.jpg) |
-| C4 Container diagram | [`docs/architecture/civicconnect-c4-container.jpg`](docs/architecture/civicconnect-c4-container.jpg) |
+| Documentation index | [`docs/README.md`](docs/README.md) |
+| PED version history | [`docs/PED/version-history.md`](docs/PED/version-history.md) |
 | Requirements Traceability Matrix | [`docs/requirements/rtm.md`](docs/requirements/rtm.md) |
-| Functional / non-functional requirements | [`docs/requirements/functional-requirements.md`](docs/requirements/functional-requirements.md), [`docs/requirements/non-functional-requirements.md`](docs/requirements/non-functional-requirements.md) |
-| Engineering decision log (DEC-001…) | [`docs/risk/Engineering-Decision-log`](docs/risk/Engineering-Decision-log) |
+| Architecture Decision Records | [`docs/adr/`](docs/adr/) |
 | Risk register | [`docs/risk/risk-register.md`](docs/risk/risk-register.md) |
-| Forward engineering considerations | [`docs/risk/forward-engineering-considerations.md`](docs/risk/forward-engineering-considerations.md) |
+| Technical debt register | [`docs/risk/technical-debt.md`](docs/risk/technical-debt.md) |
+| Release evidence summary | [`docs/release/release-evidence-summary.md`](docs/release/release-evidence-summary.md) |
 
 ## Contribution workflow
 
@@ -103,10 +96,10 @@ Tests: `./mvnw test` in `backend/demo`.
 
 ## Known limitations
 
-Tracked technical debt is in [`Technical Debt`](Technical%20Debt). Highlights for M3:
+Tracked technical debt is in [`docs/risk/technical-debt.md`](docs/risk/technical-debt.md). Highlights:
 
 - **SPA fallback auth (TD-007).** `/api/v1/**` routes are authenticated / role-gated; `.anyRequest().permitAll()` remains only so packaged React Router paths can load.
 - **H2 append-only (TD-006).** NFR004 DB triggers apply on the postgres profile; demo/H2 is app-layer only.
-- **PERF-LIST-01.** Recorded run was local with an empty list (0 rows), not staging — see `docs/testing/performance-list-evidence.md`.
+- **PERF-LIST-01.** Recorded on simulated staging (demo/H2, 9 rows), not public cloud — see [`docs/testing/performance-list-evidence.md`](docs/testing/performance-list-evidence.md).
 - **StatusVisibilityUpdater (NFR001 / FR004).** Still pending team scope decision.
 - **Release-candidate tag.** Use `v3.0.0-rc1` (see `docs/staging/rollback.md` and PED version history).
