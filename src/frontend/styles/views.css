@@ -1,19 +1,9 @@
-/* Styles for the Staff and Management request views. */
-
-.view-stack {
-  display: grid;
-  gap: 1.25rem;
-}
-
-/* Let grid children shrink so the page fits 375px without sideways scrolling (NFR005) */
-.view-stack > * {
-  min-width: 0;
-}
+/* Staff and Management request views (FR005, FR006, FR012, FR013). */
 
 .view-title {
   margin: 0;
-  font-size: 1.25rem;
-  color: var(--navy);
+  font-size: 1.45rem;
+  font-weight: 800;
 }
 
 .view-sub {
@@ -28,21 +18,25 @@
   gap: 1rem;
 }
 
-.view-header-row .btn-outline,
-.filter-actions .btn-outline {
-  padding: 0.5rem 0.9rem;
-  font-size: 0.9rem;
+.view-header-row > div {
+  min-width: 0;
 }
 
-/* Summary cards */
+.btn-icon {
+  min-height: 42px;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+}
+
+/* Summary tiles */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .summary-grid.secondary {
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -51,90 +45,126 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 0.15rem;
+  gap: 0.1rem;
   width: 100%;
-  padding: 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  min-height: 0;
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
   background: var(--subtle);
-  color: var(--text);
+  color: var(--ink);
   font: inherit;
   text-align: left;
 }
 
 button.summary-card {
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
 }
 
 button.summary-card:hover {
-  background: var(--subtle);
-  border-color: var(--navy);
+  transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
 
-button.summary-card:focus-visible {
-  outline: 2px solid var(--navy);
-  outline-offset: 2px;
-}
-
 .summary-card.active {
-  border-color: var(--navy);
-  box-shadow: inset 0 0 0 2px var(--navy);
+  border-color: currentColor;
+  box-shadow: var(--shadow);
 }
 
-.summary-card.tone-Overdue {
-  background: #fff4ed;
-  border-color: #f5c9a8;
+.summary-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 0.5rem;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.75);
 }
 
 .summary-value {
-  font-size: 1.9rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--navy);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .summary-label {
-  font-weight: 600;
-  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .summary-hint {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 
+.summary-card.tone-Open { background: #E2EFFF; color: #1D4ED8; }
+.summary-card.tone-Overdue { background: #FFE9E2; color: #B42318; }
+.summary-card.tone-Resolved { background: #DCFCE7; color: #067647; }
+.summary-card.tone-Closed { background: #EEF0F5; color: #475467; }
+.summary-card.tone-Assigned { background: #EFE7FF; color: #6D28D9; }
+.summary-card.tone-InProgress { background: #FEF3C7; color: #92400E; }
+
 .summary-card.small {
   flex-direction: row;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.summary-card.small .summary-icon {
+  margin: 0;
 }
 
 .summary-card.small .summary-value {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
 }
 
 /* Filters */
 .filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin: 0 0 1.1rem;
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  background: var(--subtle);
+  border: 1px solid var(--border);
 }
 
 .filters label {
-  flex: 1 1 160px;
-  font-size: 0.88rem;
   margin: 0;
+  min-width: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
 }
 
-.filters select,
-.filters input {
+.filters input,
+.filters select {
+  min-height: 44px;
   margin-top: 0.3rem;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.95rem;
+  background: var(--white);
+  font-size: 0.9rem;
+}
+
+.search-wrap {
+  position: relative;
+  display: block;
+}
+
+.search-wrap .icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-35%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-wrap input {
+  padding-left: 2.5rem;
 }
 
 .filter-actions {
@@ -142,75 +172,231 @@ button.summary-card:focus-visible {
   align-items: flex-end;
 }
 
-/* Table */
+.filter-actions .btn-outline {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* Request table */
 .table-wrap {
   overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .request-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: left;
-  font-size: 0.95rem;
-}
-
-.request-table th,
-.request-table td {
-  padding: 0.7rem 0.5rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
+  font-size: 0.9rem;
 }
 
 .request-table th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  background: var(--subtle);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.request-table td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.request-table tbody tr {
+  transition: background 0.15s;
+}
+
+.request-table tbody tr:hover {
+  background: #FFFAF6;
+}
+
+.col-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cell-title {
+  font-weight: 700;
+}
+
+.cell-id {
+  font-size: 0.78rem;
   color: var(--muted);
 }
 
-.link-button {
-  background: none;
-  color: var(--navy);
-  padding: 0;
-  font-weight: 700;
-  font-size: inherit;
-  text-decoration: underline;
+.col-date,
+.col-category {
+  color: #3A4152;
 }
-
-.link-button:hover {
-  background: none;
-  color: var(--navy-hover);
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.status-Open { background: #e7f0ff; color: #1d4f91; }
-.status-Assigned { background: #efe7ff; color: #5b3d99; }
-.status-InProgress { background: #fff1e6; color: #8a3d14; }
-.status-Resolved { background: #e3f4ea; color: #1e6b3f; }
-.status-Closed { background: #e6e8e7; color: #44504b; }
 
 .empty-state {
-  padding: 0.5rem 0;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  background: var(--subtle);
+  border: 1.5px dashed var(--border-strong);
+  text-align: center;
 }
 
-@media (max-width: 640px) {
+/* Tablet */
+@media (max-width: 900px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+/* Phones: each table row becomes a card (NFR005) */
+@media (max-width: 640px) {
   .view-header-row {
-    flex-direction: column;
+    flex-wrap: wrap;
   }
 
-  .request-table .col-category {
+  .view-title {
+    font-size: 1.25rem;
+  }
+
+  .summary-grid.secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary-value {
+    font-size: 1.6rem;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.75rem;
+  }
+
+  .filters .search-field {
+    grid-column: 1 / -1;
+  }
+
+  .table-wrap {
+    overflow: visible;
+    border: none;
+  }
+
+  .request-table thead {
     display: none;
+  }
+
+  .request-table,
+  .request-table tbody {
+    display: block;
+  }
+
+  .request-table tbody {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .request-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.75rem;
+    padding: 0.9rem;
+    border-radius: var(--radius);
+    background: var(--white);
+    border: 1.5px solid var(--border);
+  }
+
+  .request-table td {
+    padding: 0;
+    border: none;
+  }
+
+  .request-table .col-main {
+    grid-column: 1 / 2;
+  }
+
+  .request-table .col-status {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .request-table .col-category,
+  .request-table .col-date {
+    grid-column: 1 / -1;
+    padding-left: 48px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .request-table .col-category::before,
+  .request-table .col-date::before {
+    content: attr(data-label) ": ";
+    font-weight: 700;
+  }
+}
+
+.cell-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.col-main {
+  display: table-cell;
+}
+
+@media (max-width: 640px) {
+  .request-table .col-main {
+    display: block;
+  }
+
+  .summary-grid.secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-card.small {
+    padding: 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .summary-card.small .summary-icon {
+    display: none;
+  }
+
+  .summary-card .summary-hint {
+    font-size: 0.7rem;
+  }
+}
+
+/* Phones: one compact row per filter (label left, control right) so option text is never cut off */
+@media (max-width: 640px) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .filters label:not(.search-field) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .filters label:not(.search-field) select {
+    width: 64%;
+    margin-top: 0;
+  }
+
+  .filter-actions .btn-outline {
+    min-height: 40px;
   }
 }

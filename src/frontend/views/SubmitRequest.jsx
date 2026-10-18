@@ -8,11 +8,12 @@ import {
     TITLE_MAX,
     validateRequestForm,
 } from "../services/validation.js";
+import { CategoryIcon } from "./Visuals.jsx";
 
-export default function SubmitRequest({ onCreated }) {
+export default function SubmitRequest({ onCreated, initialCategory = "" }) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [category, setCategory] = useState("");
+    const [category, setCategory] = useState(initialCategory);
     const [fieldErrors, setFieldErrors] = useState({});
     const [formError, setFormError] = useState("");
     const [created, setCreated] = useState(null);
@@ -47,9 +48,14 @@ export default function SubmitRequest({ onCreated }) {
     const createdId = created?.id ?? created?.requestId;
 
     return (
-        <div className="card">
-            <h2 className="page-title">Submit a request</h2>
-            <p className="muted">Tell us what needs attention. All fields are required.</p>
+        <div className="card form-card">
+            <div className="form-head">
+                <CategoryIcon category={category || "Other"} size="lg" />
+                <div>
+                    <h2 className="page-title">Submit a request</h2>
+                    <p className="muted">Tell us what needs attention. All fields are required.</p>
+                </div>
+            </div>
 
             {created && (
                 <div className="alert alert-success" role="status">
@@ -125,7 +131,7 @@ export default function SubmitRequest({ onCreated }) {
                 </div>
 
                 <div className="form-actions">
-                    <button type="submit" disabled={submitting}>
+                    <button type="submit" className="btn-block" disabled={submitting}>
                         {submitting ? "Submitting..." : "Submit request"}
                     </button>
                 </div>

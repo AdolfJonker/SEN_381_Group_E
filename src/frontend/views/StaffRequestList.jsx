@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchRequests } from "../services/client.js";
 import { CATEGORIES, STATUSES, STATUS_LABELS } from "../services/requestOptions.js";
 import RequestTable from "./RequestTable.jsx";
+import { Icon } from "./Visuals.jsx";
 import "../styles/views.css";
 
 /**
@@ -9,7 +10,8 @@ import "../styles/views.css";
  * The server returns only the staff member's scope: their assigned work plus Open requests,
  * then applies search / status / category / sort on that scope.
  */
-export default function StaffRequestList({ onSelect }) {
+export default function StaffRequestList({ user, onSelect }) {
+  const firstName = (user?.name || "").trim().split(/\s+/)[0];
   const [requests, setRequests] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -42,11 +44,13 @@ export default function StaffRequestList({ onSelect }) {
     <section className="card" aria-labelledby="staff-heading">
       <div className="view-header-row">
         <div>
+          {firstName && <p className="eyebrow">Hi {firstName}</p>}
           <h2 id="staff-heading" className="view-title">Service requests</h2>
           <p className="muted view-sub">Your assigned work and Open requests waiting to be accepted.</p>
         </div>
-        <button type="button" className="btn-outline" onClick={() => setReloadKey((k) => k + 1)}>
-          Refresh
+        <button type="button" className="btn-outline btn-icon" onClick={() => setReloadKey((k) => k + 1)}>
+          <Icon name="refresh" />
+          <span>Refresh</span>
         </button>
       </div>
 
@@ -57,14 +61,17 @@ export default function StaffRequestList({ onSelect }) {
       ) : null}
 
       <div className="filters">
-        <label>
+        <label className="search-field">
           Search
-          <input
+          <span className="search-wrap">
+            <Icon name="search" />
+            <input
             type="search"
             placeholder="ID or title"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          </span>
         </label>
         <label>
           Status

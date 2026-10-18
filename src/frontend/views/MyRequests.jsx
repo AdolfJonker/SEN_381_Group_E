@@ -1,9 +1,9 @@
-
- // MyRequests view (FR003 + FR004 / NFR001): requester's own requests with live status refresh
+// MyRequests view (FR003 + FR004 / NFR001): requester's own requests with live status refresh
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchMyRequests } from "../services/client.js";
 import { detectStatusChanges } from "../services/statusChanges.js";
 import "../styles/requests.css";
+import { CategoryIcon, Icon, StatusSteps } from "./Visuals.jsx";
 
 const STATUS_LABELS = {
     Open: "Open",
@@ -83,13 +83,16 @@ export default function MyRequests({ onSubmitClick, onSelectRequest }) {
 
     return (
         <div className="card">
-            <h2 className="page-title">My requests</h2>
-            <p className="muted">
-                The requests you have submitted, newest first. Status updates automatically.
-            </p>
+            <div className="view-header-row">
+                <div>
+                    <h2 className="page-title">My requests</h2>
+                    <p className="muted view-sub">Newest first. Tap a request for details. Status updates automatically.</p>
+                </div>
+                <span className="live-dot" aria-hidden="true">Live</span>
+            </div>
 
             {lastChange && (
-                <div className="alert alert-info" role="status">
+                <div className="alert alert-info change-banner" role="status">
                     Request #{lastChange.id} moved from{" "}
                     {STATUS_LABELS[lastChange.from] ?? lastChange.from} to{" "}
                     {STATUS_LABELS[lastChange.to] ?? lastChange.to}.
@@ -120,7 +123,7 @@ export default function MyRequests({ onSubmitClick, onSelectRequest }) {
             )}
 
             {!loading && !error && requests.length === 0 && (
-                <>
+                <div className="empty-state">
                     <p>You have not submitted any requests yet.</p>
                     {onSubmitClick && (
                         <div className="request-list-actions">
@@ -129,7 +132,7 @@ export default function MyRequests({ onSubmitClick, onSelectRequest }) {
                             </button>
                         </div>
                     )}
-                </>
+                </div>
             )}
 
             {!loading && !error && requests.length > 0 && (
@@ -139,35 +142,44 @@ export default function MyRequests({ onSubmitClick, onSelectRequest }) {
                         const label = STATUS_LABELS[statusKey] ?? statusKey;
 
                         return (
-                            <li key={request.id} className="request-item">
+                            <li
+                                key={request.id}
+                                className={`request-item${lastChange?.id === request.id ? " just-changed" : ""}`}
+                            >
                                 <button
                                     type="button"
                                     className="request-item-button"
                                     onClick={() => onSelectRequest?.(request.id)}
                                     aria-label={`View details for request ${request.id}: ${request.title}`}
                                 >
-                                    <div className="request-item-head">
-                                        <span className="request-id">
-                                            Request #{request.id}
+                                    <CategoryIcon category={request.category} />
+                                    <span className="request-body">
+                                        <span className="request-item-head">
+                                            <span className="request-id">
+                                                Request #{request.id}
+                                            </span>
+                                            <span
+                                                className={`status-badge status-${statusKey.toLowerCase()}`}
+                                            >
+                                                {label}
+                                            </span>
                                         </span>
-                                        <span
-                                            className={`status-badge status-${statusKey.toLowerCase()}`}
-                                        >
-                                            {label}
+
+                                        <span className="request-title">{request.title}</span>
+
+                                        <span className="request-meta">
+                                            <span>{request.category}</span>
+                                            <span>
+                                                Submitted {formatDate(request.createdAt)}
+                                            </span>
                                         </span>
-                                    </div>
 
-                                    <p className="request-title">{request.title}</p>
+                                        <StatusSteps status={statusKey} inline />
 
-                                    <div className="request-meta">
-                                        <span>{request.category}</span>
-                                        <span>
-                                            Submitted {formatDate(request.createdAt)}
+                                        <span className="request-open-hint">
+                                            View request details
+                                            <Icon name="arrow" />
                                         </span>
-                                    </div>
-
-                                    <span className="request-open-hint">
-                                        View request details →
                                     </span>
                                 </button>
                             </li>

@@ -1,9 +1,8 @@
-// RequestDetail view
-
-
+// RequestDetail view: a requester's own request with its status history (FR002, NFR004).
 import { useEffect, useState } from "react";
 import { fetchRequest } from "../services/client.js";
 import "../styles/requests.css";
+import { CategoryIcon, Icon, StatusSteps } from "./Visuals.jsx";
 
 const STATUS_LABELS = {
     Open: "Open",
@@ -66,10 +65,11 @@ export default function RequestDetail({ requestId, onBack }) {
     }, [requestId]);
 
     return (
-        <section className="card" aria-labelledby="request-detail-heading">
-            <div className="request-list-actions">
-                <button type="button" className="btn-outline" onClick={onBack}>
-                    Back to My Requests
+        <section className="card detail-card" aria-labelledby="request-detail-heading">
+            <div className="detail-top">
+                <button type="button" className="btn-ghost btn-icon" onClick={onBack}>
+                    <Icon name="back" />
+                    <span>Back to My Requests</span>
                 </button>
             </div>
 
@@ -87,16 +87,16 @@ export default function RequestDetail({ requestId, onBack }) {
 
             {!loading && !error && request && (
                 <>
-                    <div className="request-detail-heading">
-                        <div>
+                    <div className="detail-hero">
+                        <CategoryIcon category={request.category} size="lg" />
+                        <div className="detail-heading">
+                            <span className="request-id">
+                                Request #{request.id} · Submitted {formatDate(request.createdAt)}
+                            </span>
                             <h2 id="request-detail-heading" className="page-title">
-                                Request #{request.id}
+                                {request.title || "Not provided"}
                             </h2>
-                            <p className="muted">
-                                Submitted {formatDate(request.createdAt)}
-                            </p>
                         </div>
-
                         <span
                             className={`status-badge status-${String(
                                 request.status ?? ""
@@ -105,54 +105,69 @@ export default function RequestDetail({ requestId, onBack }) {
                             {displayStatus(request.status)}
                         </span>
                     </div>
+                    <StatusSteps status={request.status} showLabels />
 
-                    <dl className="request-detail-fields">
-                        <div>
-                            <dt>Title</dt>
-                            <dd>{request.title || "Not provided"}</dd>
-                        </div>
-                        <div>
-                            <dt>Category</dt>
-                            <dd>{request.category || "Not provided"}</dd>
-                        </div>
-                        <div>
-                            <dt>Description</dt>
-                            <dd className="request-description">
+                    <div className="detail-grid">
+                        <div className="detail-main">
+                            <h3 className="section-title">Description</h3>
+                            <p className="description-block">
                                 {request.description || "No description provided."}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>Last updated</dt>
-                            <dd>{formatDate(request.updatedAt)}</dd>
-                        </div>
-                    </dl>
-
-                    <section aria-labelledby="request-history-heading">
-                        <h3 id="request-history-heading">Status history</h3>
-
-                        {request.history?.length ? (
-                            <ol className="request-history">
-                                {request.history.map((entry) => (
-                                    <li key={entry.id}>
-                                        <p className="request-history-status">
-                                            {entry.fromStatus
-                                                ? `${displayStatus(entry.fromStatus)} → `
-                                                : ""}
-                                            {displayStatus(entry.toStatus)}
-                                        </p>
-                                        <p className="muted">
-                                            {formatDate(entry.changedAt)}
-                                        </p>
-                                        {entry.note && <p>{entry.note}</p>}
-                                    </li>
-                                ))}
-                            </ol>
-                        ) : (
-                            <p className="muted">
-                                No status history is available yet.
                             </p>
-                        )}
-                    </section>
+
+                            <section aria-labelledby="request-history-heading">
+                                <h3 id="request-history-heading" className="section-title">
+                                    Status history
+                                </h3>
+
+                                {request.history?.length ? (
+                                    <ol className="timeline">
+                                        {request.history.map((entry) => (
+                                            <li key={entry.id}>
+                                                <strong>
+                                                    {entry.fromStatus
+                                                        ? `${displayStatus(entry.fromStatus)} → `
+                                                        : ""}
+                                                    {displayStatus(entry.toStatus)}
+                                                </strong>
+                                                <div className="muted small">
+                                                    {formatDate(entry.changedAt)}
+                                                </div>
+                                                {entry.note && <p>{entry.note}</p>}
+                                            </li>
+                                        ))}
+                                    </ol>
+                                ) : (
+                                    <p className="muted">
+                                        No status history is available yet.
+                                    </p>
+                                )}
+                            </section>
+                        </div>
+
+                        <aside className="detail-side">
+                            <dl className="meta-grid">
+                                <div>
+                                    <dt>Category</dt>
+                                    <dd>{request.category || "Not provided"}</dd>
+                                </div>
+                                <div>
+                                    <dt>Status</dt>
+                                    <dd>{displayStatus(request.status)}</dd>
+                                </div>
+                                <div>
+                                    <dt>Submitted</dt>
+                                    <dd>{formatDate(request.createdAt)}</dd>
+                                </div>
+                                <div>
+                                    <dt>Last updated</dt>
+                                    <dd>{formatDate(request.updatedAt)}</dd>
+                                </div>
+                            </dl>
+                            <p className="muted small side-note">
+                                Updates appear here as staff work on your request.
+                            </p>
+                        </aside>
+                    </div>
                 </>
             )}
         </section>
