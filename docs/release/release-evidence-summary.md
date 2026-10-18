@@ -25,7 +25,7 @@ Blocked-PR evidence: screenshot of a PR with a failing required check and the di
 | Owner | Evidence file | Tests | Result recorded |
 |---|---|---|---|
 | Elcke | `docs/testing/status-lifecycle-test-evidence.md` | TC-E-01…29 (+ 23-case decision test); TC-E-30…32 not run | Pass (runs A, B, E); manual live check 14/10 |
-| Adolf | `Adolf/adolf-test-evidence.md` | TC-A-01…09, TC-A-INT-01…04, TC-A-E2E-01/02, PERF-LIST-01 | Unit/integration pass; E2E and perf pass on local only |
+| Adolf | `docs/testing/adolf-test-evidence.md` | TC-A-01…09, TC-A-INT-01…04, TC-A-E2E-01/02, PERF-LIST-01 | Unit/integration pass; E2E and perf pass on local only |
 | Donya | `docs/testing/access-control-test-evidence.md` | TC-D-01…04, TC-D-INT-01…04, TC-D-05, TC-D-06/07 | Pass (local, 14/10); TC-D-INT-01c to run |
 
 Total backend test count on main: take it from the CI run (Surefire summary) and add it here. Do not add the counts from the separate runs; some runs overlap.

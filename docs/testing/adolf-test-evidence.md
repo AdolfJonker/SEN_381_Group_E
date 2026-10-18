@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Owner | Adolf |
-| Covers | FR001, FR006, FR007 (detail deny), FR008, FR009 (status unit on write path), FR012, FR013, NFR003, NFR004, ADR-DATA-001 |
+| Covers | FR001, FR006, FR007 (detail deny), FR008, FR009 (status unit on write path), FR010 (comments), FR012, FR013, NFR003, NFR004, ADR-DATA-001 |
 | Does **not** claim | **FR005 / RTM-005** (access-control owns staff list scope: `TC-UNIT-RBAC-*`, `TC-API-SEC-04`) |
 | Document status | M3 evidence complete against **simulated staging** (2026-10-15): Surefire green; E2E 3/3; PERF 9-row run. Public Render E2E/PERF **optional** (SEN381_M3.pdf §14). |
 | Last updated | 15/10/2026 |
@@ -29,6 +29,7 @@ Related teammate evidence (not counted as Adolf-owned):
 | TC-A-INT-02 | NFR004 / RTM-017 | — |
 | TC-A-INT-03 | FR008 / RTM-008 + ADR-DATA-001 | — |
 | TC-A-INT-04 | FR006 / RTM-006, FR012 / RTM-012, FR013 / RTM-013 | FR005 / RTM-005 |
+| TC-A-INT-05 | FR010 / RTM-010 | — |
 | TC-A-E2E-01 | FR001–FR011 path (E2E) | — |
 | TC-A-E2E-02 / 02b | NFR003 / RTM-016 | — |
 | PERF-LIST-01 | FR006 list hot path (simulated staging; 9 rows) | Claiming cloud staging / SLA |
@@ -48,12 +49,12 @@ Related teammate evidence (not counted as Adolf-owned):
 |---|---|---|---|
 | Unit — `ServiceRequestLifecycleTest` | 7 | TC-A-01…A-07 | Pass (automated) |
 | Unit — `StaffFilterStrategyTest` | 2 | TC-A-08, TC-A-09 | Pass (automated) |
-| API — `ServiceRequestApiIntegrationTest` | 4 | TC-A-INT-01…04 | Pass (automated) |
+| API — `ServiceRequestApiIntegrationTest` | 5 | TC-A-INT-01…05 | Pass (automated; INT-05 added 2026-10-18) |
 | E2E — Playwright | 3 | TC-A-E2E-01, TC-A-E2E-02, TC-A-E2E-02b | Pass (local 2026-10-15, 3/3) |
 | Performance — `scripts/perf-list.mjs` | 1 | PERF-LIST-01 | Pass (local; **9 rows**; avg ~5.9 ms) |
-| **Total** | **17** | **17 IDs** (each mapped once; none to RTM-005) | **17 pass / 0 fail (current local)** |
+| **Total** | **18** | **18 IDs** (each mapped once; none to RTM-005) | **18 pass / 0 fail (current local)** |
 
-Backend Adolf classes alone: **13** Surefire tests. Full project Surefire after merge isolation fix: **116** tests, **0** failures (local 2026-10-15).
+Backend Adolf classes alone: **14** Surefire tests (13 at M3 + TC-A-INT-05). Full project Surefire after merge isolation fix: **116** tests, **0** failures (local 2026-10-15).
 
 ## 4. Test records (current expected / actual)
 
@@ -72,6 +73,7 @@ Backend Adolf classes alone: **13** Surefire tests. Full project Surefire after 
 | TC-A-INT-02 | NFR004 / RTM-017 | Illegal write leaves no orphan history | API (H2) | Assigned → Closed skip | 400; history unchanged | Pass | Pass (automated) | same | TX rollback |
 | TC-A-INT-03 | FR008 / RTM-008, ADR-DATA-001 | Parallel conflict | Parallel MockMvc | Two same-version updates | One 200, one 409; +1 history | Pass | Pass (automated) | same | H2 single JVM |
 | TC-A-INT-04 | FR006 / RTM-006, FR012 / RTM-012, FR013 / RTM-013 | Filter + summary | API (H2) | status/category/search; summary | Filtered list; counts; staff 403 on summary | Pass | Pass (automated) | same | Not FR005 list-strategy ownership |
+| TC-A-INT-05 | FR010 / RTM-010 | Comments had no automated test (RTM gap) | API (H2), positive + negative | Staff comment; requester comment; blank comment | Staff: 200, comment in response and on `GET` detail with author/time. Requester: 403. Blank: 400. Count stays 1 | Pass (2026-10-18, class 5/5) | Pass (automated) | `ServiceRequestApiIntegrationTest` | Closes RTM-010 test gap; manual UI-A-FR010 is supporting |
 | TC-A-E2E-01 | FR001–FR011 path | Full lifecycle | Playwright | Demo users | Closed visible to requester | Pass 2026-10-15 (Vite `127.0.0.1:5173`) | Pass (local) | `e2e/tests/lifecycle.spec.js` | Simulated staging; cloud re-run optional |
 | TC-A-E2E-02 | NFR003 / RTM-016 | Unauth list blocked | Playwright API | No cookie | 401/403 | Pass 2026-10-15 | Pass (local) | `e2e/tests/unauthorised.spec.js` | Complements Donya ASR-01 |
 | TC-A-E2E-02b | NFR003 / RTM-016, FR012 | Staff denied summary | Playwright API | Staff session | 403 | Pass 2026-10-15 | Pass (local) | same | — |
@@ -165,7 +167,30 @@ Detail tables for each defect follow.
 |---|---|
 | TC-A-01…A-07 | `src/backend/src/test/java/civicconnect/services/ServiceRequestLifecycleTest.java` |
 | TC-A-08 / A-09 | `src/backend/src/test/java/civicconnect/strategies/StaffFilterStrategyTest.java` |
-| TC-A-INT-01…04 | `src/backend/src/test/java/civicconnect/api/ServiceRequestApiIntegrationTest.java` |
+| TC-A-INT-01…05 | `src/backend/src/test/java/civicconnect/api/ServiceRequestApiIntegrationTest.java` |
 | TC-A-E2E-01 | `e2e/tests/lifecycle.spec.js` |
 | TC-A-E2E-02 / 02b | `e2e/tests/unauthorised.spec.js` |
 | PERF-LIST-01 | `docs/testing/performance-list-evidence.md`, `scripts/perf-list.mjs` |
+| UI-A-STATUS / UI-A-375 | `docs/testing/evidence/adolf/` (manual UI §9) |
+
+## 9. Manual UI checks (Adolf M4 — supporting)
+
+| Field | Value |
+|---|---|
+| Date | 2026-10-18 |
+| Environment | Simulated staging — demo/H2 API `127.0.0.1:8081` + Vite `127.0.0.1:5173` |
+| Branch / commit | `feature/m4-adolf-freeze` / `313d4bd` |
+| Login | `staff@civicconnect.local` / `Password123!` |
+| How started | Backend: `SPRING_PROFILES_ACTIVE=demo`, `SERVER_PORT=8081`, `mvnw -DskipTests spring-boot:run`. Frontend: `npm run dev`. |
+
+| Check ID | Basis | Steps / what was shown | Expected | Actual | Status | Evidence |
+|---|---|---|---|---|---|---|
+| UI-A-STATUS | FR008 / FR009 staff status path | Staff detail `#1`: Open → Accept → Assigned → In Progress → Resolved → Closed | Full lifecycle on detail; history complete | History: Open→Assigned→In Progress→Resolved→Closed; badge Closed; “No further status change” | Pass | `ui-status-open-accept.png`, `ui-status-assigned-start.png`, `ui-status-closed-history.png` |
+| UI-A-FR010 | FR010 comments | Staff → add comments on detail → confirm listed | Comments visible with author/time | Two comments on detail (“I am starting work…”, “I have fixed…”) by Demo Staff | Pass | `ui-status-closed-history.png`, `ui-fr010-comments-375.png` |
+| UI-A-375 | NFR005 | DevTools **375×812** on staff list + staff detail | No sideways scroll | List and detail fit at 375×812; no horizontal scroll visible | Pass | `ui-375-staff-list.png`, `ui-375-staff-detail.png`, `ui-fr010-comments-375.png` |
+
+### Interpretation
+
+* Manual UI support for M4; not counted in the 18 automated Adolf IDs.
+* Staff status, FR010 comments, and 375 px staff list/detail all Pass on simulated staging (2026-10-18).
+* PED: one line each pointing here + `docs/testing/evidence/adolf/`.

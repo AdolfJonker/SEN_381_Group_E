@@ -24,7 +24,7 @@ Blueprint: repo-root [`render.yaml`](../../render.yaml) · Image: [`Dockerfile`]
    - `GET …/api/v1/health`
 3. Update [`rollback.md`](./rollback.md) with **URL**, **SHA**, and date.
 4. Tag: `git tag -a v3.0.0-rc1 <sha> -m "M3 release candidate"` then `git push origin v3.0.0-rc1`.
-5. Run staging E2E + PERF (commands in [`docs/testing/m3-adolf-closeout.md`](../testing/m3-adolf-closeout.md)).
+5. Run staging E2E + PERF (commands in [`docs/release/m3-adolf-closeout.md`](../release/m3-adolf-closeout.md)).
 
 ## Notes
 
