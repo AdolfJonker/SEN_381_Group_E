@@ -1,7 +1,7 @@
-// MyRequests view (FR003): the signed in requester's own requests
-
-import { useCallback, useEffect, useState } from "react";
+// MyRequests view (FR003 + FR004 / NFR001): requester's own requests with live status refresh
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchMyRequests } from "../services/client.js";
+import { detectStatusChanges } from "../services/statusChanges.js";
 import "../styles/requests.css";
 
 const STATUS_LABELS = {
@@ -11,6 +11,8 @@ const STATUS_LABELS = {
     Resolved: "Resolved",
     Closed: "Closed",
 };
+
+const POLL_INTERVAL_MS = 4000;
 
 function formatDate(value) {
     if (!value) {
@@ -31,28 +33,59 @@ export default function MyRequests({ onSubmitClick }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [lastChange, setLastChange] = useState(null);
+    const previousRef = useRef([]);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError("");
+    const load = useCallback(async (isPoll = false) => {
+        if (!isPoll) {
+            setLoading(true);
+            setError("");
+        }
         try {
             const data = await fetchMyRequests();
-            setRequests(Array.isArray(data) ? data : []);
+            const list = Array.isArray(data) ? data : [];
+            const changes = detectStatusChanges(previousRef.current, list);
+            if (changes.length > 0) {
+                const latest = changes[changes.length - 1];
+                setLastChange(latest);
+            }
+            previousRef.current = list;
+            setRequests(list);
         } catch (err) {
-            setError(err.message || "Could not load your requests.");
+            if (!isPoll) {
+                setError(err.message || "Could not load your requests.");
+            }
         } finally {
-            setLoading(false);
+            if (!isPoll) {
+                setLoading(false);
+            }
         }
     }, []);
 
+    // Initial load
     useEffect(() => {
-        load();
+        load(false);
+    }, [load]);
+
+    // Poll every 4 seconds (NFR001: status visible within 5 seconds)
+    useEffect(() => {
+        const id = setInterval(() => {
+            load(true);
+        }, POLL_INTERVAL_MS);
+        return () => clearInterval(id);
     }, [load]);
 
     return (
         <div className="card">
             <h2 className="page-title">My requests</h2>
-            <p className="muted">The requests you have submitted, newest first.</p>
+            <p className="muted">The requests you have submitted, newest first. Status updates automatically.</p>
+
+            {lastChange && (
+                <div className="alert alert-info" role="status">
+                    Request #{lastChange.id} moved from {STATUS_LABELS[lastChange.from] ?? lastChange.from} to{" "}
+                    {STATUS_LABELS[lastChange.to] ?? lastChange.to}.
+                </div>
+            )}
 
             {loading && (
                 <p className="muted" role="status">
@@ -66,7 +99,7 @@ export default function MyRequests({ onSubmitClick }) {
                         {error}
                     </div>
                     <div className="request-list-actions">
-                        <button type="button" className="btn-outline" onClick={load}>
+                        <button type="button" className="btn-outline" onClick={() => load(false)}>
                             Try again
                         </button>
                     </div>
