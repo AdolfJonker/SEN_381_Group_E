@@ -1,3 +1,4 @@
+
 package civicconnect.services;
 
 import civicconnect.api.dto.StatusChangeResponse;
@@ -17,13 +18,19 @@ import java.util.Objects;
 
 /**
  * Changes a request's status (FR009, FR011, NFR004).
- * Order follows ADR-DATA-001: guard, conditional update (flush), audit row, commit.
- * Any failure rolls everything back, so a rejected change writes nothing.
+ *
+ * Permission is checked before the version, and the version is checked
+ * before transition legality. This ensures forbidden users receive 403
+ * and permitted users with stale data receive 409.
+ *
+ * The update is flushed before the audit row is written, following
+ * ADR-DATA-001. A failed update must not produce an audit entry.
  */
 @Service
 public class RequestStatusService {
 
-    static final String CONFLICT_MESSAGE = "This request was changed by someone else. Reload and try again.";
+    static final String CONFLICT_MESSAGE =
+            "This request was changed by someone else. Reload and try again.";
 
     private final ServiceRequestRepository requestRepository;
     private final UserRepository userRepository;
@@ -43,45 +50,74 @@ public class RequestStatusService {
     }
 
     @Transactional
-    public StatusChangeResponse changeStatus(String actorEmail,
-                                             Long requestId,
-                                             RequestStatus to,
-                                             Integer expectedVersion,
-                                             String note) {
+    public StatusChangeResponse changeStatus(
+            String actorEmail,
+            Long requestId,
+            RequestStatus to,
+            Integer expectedVersion,
+            String note
+    ) {
         User actor = userRepository.findByEmail(actorEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not signed in"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Not signed in"));
+
         ServiceRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Request not found"));
 
         RequestStatus from = request.getStatus();
-        boolean assignedToActor = request.getAssignedTo() != null
-                && Objects.equals(request.getAssignedTo().getId(), actor.getId());
 
-        StatusTransitionGuard.Decision decision = guard.evaluate(from, to, actor.getRole(), assignedToActor);
+        boolean assignedToActor = request.getAssignedTo() != null
+                && Objects.equals(
+                request.getAssignedTo().getId(),
+                actor.getId());
+
+        StatusTransitionGuard.Decision decision =
+                guard.evaluate(from, to, actor.getRole(), assignedToActor);
+
+        // 1. Permission takes precedence over version and transition checks.
         if (decision == StatusTransitionGuard.Decision.FORBIDDEN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to make this change.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to make this change.");
         }
+
+        // 2. Reject stale data before checking whether the transition is legal.
+        // A permitted user with an outdated version must receive HTTP 409,
+        // even when the request's current status makes their transition illegal.
+        if (expectedVersion != null
+                && !expectedVersion.equals(request.getVersion())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    CONFLICT_MESSAGE);
+        }
+
+        // 3. The version is current, so transition legality can be checked.
         if (decision == StatusTransitionGuard.Decision.ILLEGAL) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "A request cannot move from " + from + " to " + to + ".");
         }
 
-        // Assigning needs an assignee, so it is handled by the assign action (FR008), not here.
+        // Assignment requires an assignee and is handled by the assign action (FR008).
         if (to == RequestStatus.Assigned) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "Use the assign action to take or assign a request.");
-        }
-
-        if (expectedVersion != null && !expectedVersion.equals(request.getVersion())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, CONFLICT_MESSAGE);
         }
 
         request.setStatus(to);
         request.setUpdatedAt(Instant.now());
-        // Flush now so the version check runs before the audit row is written.
+
+        // Flush first so persistence/version failures occur before audit recording.
         ServiceRequest saved = requestRepository.saveAndFlush(request);
+
+        // Record the audit entry only after the update has successfully flushed.
         auditLogObserver.record(saved, from, to, actor, note);
-        // comment out the auditLogObserver line above tp prove a test can fail
-        return new StatusChangeResponse(saved.getId(), saved.getStatus().name(), saved.getVersion());
+
+        return new StatusChangeResponse(
+                saved.getId(),
+                saved.getStatus().name(),
+                saved.getVersion());
     }
 }
