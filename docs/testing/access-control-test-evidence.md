@@ -48,9 +48,9 @@ This record holds the test design and results for role-based access, the role vi
 | TC-D-05 | Who may set Resolved or Closed | Decision table | Unit (black box on the guard) | FR011, D2–D6 | RTM-011 | Pass (local, 14/10/2026) |
 | TC-D-06 | Each role lands on its own view | Unit | Frontend unit | NFR003, FR012 | RTM-016 | Pass (13/10/2026) |
 | TC-D-07 | Category, status and search filters | Equivalence partitioning | Frontend unit | FR013, FR006 | RTM-013, RTM-006 | Pass (13/10/2026) |
-| TC-D-08 | Demo users switched off (postgres/staging default): no accounts created | Negative | Unit | RISK-004, NFR003 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
-| TC-D-09 | Demo users switched on without a password: start-up stops, nothing saved | Negative | Unit | RISK-004 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
-| TC-D-10 | Demo users switched on: three accounts saved with the configured password | Unit | Unit | RISK-004 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
+| TC-D-08 | Demo users switched off (postgres/staging default): no accounts created | Negative | Unit | RISK-004, NFR003 | RTM-016 | Pass (18/10/2026, CI run #41) |
+| TC-D-09 | Demo users switched on without a password: start-up stops, nothing saved | Negative | Unit | RISK-004 | RTM-016 | Pass (18/10/2026, CI run #41) |
+| TC-D-10 | Demo users switched on: three accounts saved with the configured password | Unit | Unit | RISK-004 | RTM-016 | Pass (18/10/2026, CI run #41) |
 
 ## 4. Test records
 
