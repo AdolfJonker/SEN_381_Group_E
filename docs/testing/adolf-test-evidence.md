@@ -169,3 +169,26 @@ Detail tables for each defect follow.
 | TC-A-E2E-01 | `e2e/tests/lifecycle.spec.js` |
 | TC-A-E2E-02 / 02b | `e2e/tests/unauthorised.spec.js` |
 | PERF-LIST-01 | `docs/testing/performance-list-evidence.md`, `scripts/perf-list.mjs` |
+| UI-A-STATUS / UI-A-375 | `docs/testing/evidence/adolf/` (manual UI §9) |
+
+## 9. Manual UI checks (Adolf M4 — supporting)
+
+| Field | Value |
+|---|---|
+| Date | 2026-10-18 |
+| Environment | Simulated staging — demo/H2 API `127.0.0.1:8081` + Vite `127.0.0.1:5173` |
+| Branch / commit | `feature/m4-adolf-freeze` / `313d4bd` |
+| Login | `staff@civicconnect.local` / `Password123!` |
+| How started | Backend: `SPRING_PROFILES_ACTIVE=demo`, `SERVER_PORT=8081`, `mvnw -DskipTests spring-boot:run`. Frontend: `npm run dev`. |
+
+| Check ID | Basis | Steps / what was shown | Expected | Actual | Status | Evidence |
+|---|---|---|---|---|---|---|
+| UI-A-STATUS | FR008 / FR009 staff status path | Staff detail `#1`: Open → Accept → Assigned → In Progress → Resolved → Closed | Full lifecycle on detail; history complete | History: Open→Assigned→In Progress→Resolved→Closed; badge Closed; “No further status change” | Pass | `ui-status-open-accept.png`, `ui-status-assigned-start.png`, `ui-status-closed-history.png` |
+| UI-A-FR010 | FR010 comments | Staff → add comments on detail → confirm listed | Comments visible with author/time | Two comments on detail (“I am starting work…”, “I have fixed…”) by Demo Staff | Pass | `ui-status-closed-history.png`, `ui-fr010-comments-375.png` |
+| UI-A-375 | NFR005 | DevTools **375×812** on staff list + staff detail | No sideways scroll | List and detail fit at 375×812; no horizontal scroll visible | Pass | `ui-375-staff-list.png`, `ui-375-staff-detail.png`, `ui-fr010-comments-375.png` |
+
+### Interpretation
+
+* Manual UI support for M4; not counted in the 17 automated Adolf IDs.
+* Staff status, FR010 comments, and 375 px staff list/detail all Pass on simulated staging (2026-10-18).
+* PED: one line each pointing here + `docs/testing/evidence/adolf/`.
