@@ -27,7 +27,7 @@ public class StatusHistory {
     private ServiceRequest request;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "from_status", nullable = false, length = 32)
+    @Column(name = "from_status", nullable = true, length = 32)
     private RequestStatus fromStatus;
 
     @Enumerated(EnumType.STRING)
