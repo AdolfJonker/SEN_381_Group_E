@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * API/integration tests for Adolf's M3 persistence slice (demo/H2).
  * TC-A-INT-*: real Spring context, HTTP session auth, Flyway schema.
- * INT-01→RTM-001; INT-02→RTM-017; INT-03→RTM-008; INT-04→RTM-006/012/013.
+ * INT-01→RTM-001; INT-02→RTM-017; INT-03→RTM-008; INT-04→RTM-006/012/013; INT-05→RTM-010.
  * None claim FR005/RTM-005.
  */
 @SpringBootTest
@@ -204,6 +204,53 @@ class ServiceRequestApiIntegrationTest {
 
         mockMvc.perform(get("/api/v1/requests/summary").session(staff))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("TC-A-INT-05 (FR010/RTM-010) Staff comment is saved and shown on detail; requester and blank comments rejected")
+    void staffCommentVisibleOnDetail() throws Exception {
+        MockHttpSession requester = login(REQUESTER);
+        MockHttpSession staff = login(STAFF);
+
+        Long requestId = createRequest(requester, "Printer jam", "Printer on floor 2 jams on every page", "IT Support");
+        accept(staff, requestId);
+
+        mockMvc.perform(post("/api/v1/requests/" + requestId + "/comments")
+                        .session(staff)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"Replaced the roller; testing now."}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comments.length()").value(1))
+                .andExpect(jsonPath("$.comments[0].content").value("Replaced the roller; testing now."))
+                .andExpect(jsonPath("$.comments[0].authorName").isNotEmpty())
+                .andExpect(jsonPath("$.comments[0].createdAt").isNotEmpty());
+
+        mockMvc.perform(get("/api/v1/requests/" + requestId).session(staff))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comments.length()").value(1))
+                .andExpect(jsonPath("$.comments[0].content").value("Replaced the roller; testing now."));
+
+        mockMvc.perform(post("/api/v1/requests/" + requestId + "/comments")
+                        .session(requester)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"Requester should not be able to add this."}
+                                """))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/requests/" + requestId + "/comments")
+                        .session(staff)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"   "}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/v1/requests/" + requestId).session(staff))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comments.length()").value(1));
     }
 
     private MockHttpSession login(String email) throws Exception {
