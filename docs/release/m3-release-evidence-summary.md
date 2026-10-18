@@ -52,4 +52,4 @@ None open for Adolf-owned M3 minimum evidence.
 
 ## Verdict
 
-**CONDITIONALLY READY** — M3 minimum evidence is in place against a credible simulated staging environment and an identified RC identifier. Condition: create/tag `v3.0.0-rc1` (or state the exact submission SHA) and paste PED v3.0 from [`docs/PED/m3-adolf-paste.md`](../PED/m3-adolf-paste.md) before Moodle submission.
+**CONDITIONALLY READY** — M3 minimum evidence is in place against a credible simulated staging environment and an identified RC identifier. Condition: create/tag `v3.0.0-rc1` (or state the exact submission SHA) and paste PED v3.0 from [`docs/PED/contributions/m3-adolf-paste.md`](../PED/contributions/m3-adolf-paste.md) before Moodle submission.

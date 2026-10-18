@@ -1,6 +1,6 @@
 # PED M3 drafts — Adolf sections (paste into PED v3.0)
 
-These are working drafts for the Word PED. Prefer the paste pack [`docs/PED/m3-adolf-paste.md`](PED/m3-adolf-paste.md) (includes submission info block). Authority: SEN381_M3.pdf — simulated staging acceptable; real cloud optional.
+These are working drafts for the Word PED. Prefer the paste pack [`docs/PED/contributions/m3-adolf-paste.md`](m3-adolf-paste.md) (includes submission info block). Authority: SEN381_M3.pdf — simulated staging acceptable; real cloud optional.
 
 ## 2. M2 conformance
 
@@ -34,4 +34,4 @@ M3 freeze uses **credible simulated staging** (Vite + Spring `demo`/H2). Real cl
 - **Target:** no contractual SLA; results are characterisation only.
 - **Reliability controls:** optimistic concurrency (RISK-010); transactional audit write; RC rollback note.
 - **Limits:** H2 single-JVM; free-tier cloud limits (RISK-006) only if Render is used later. A green performance run does **not** prove municipal production load.
-- **Close-out tracker:** `docs/testing/m3-adolf-closeout.md`. PED paste pack: `docs/PED/m3-adolf-paste.md`. Release summary: `docs/release/m3-release-evidence-summary.md`.
+- **Close-out tracker:** `docs/release/m3-adolf-closeout.md`. PED paste pack: `docs/PED/contributions/m3-adolf-paste.md`. Release summary: `docs/release/m3-release-evidence-summary.md`.

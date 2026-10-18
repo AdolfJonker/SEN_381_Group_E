@@ -12,7 +12,7 @@
 
 ## 1. Purpose and scope
 
-This record maps each test to its requirement, states the expected result, and records what actually happened. A test is marked Pass only where a recorded run shows it passing. Expected results come from the requirements, the decisions in docs/desicions/D2-D6-status-transition-authority.md and ADR-DATA-001. This file supports PED v3.0 sections 6, 7 and 9 and the test references in the RTM.
+This record maps each test to its requirement, states the expected result, and records what actually happened. A test is marked Pass only where a recorded run shows it passing. Expected results come from the requirements, the decisions in docs/decisions/D2-D6-status-transition-authority.md and ADR-DATA-001. This file supports PED v3.0 sections 6, 7 and 9 and the test references in the RTM.
 
 ## 2. How to read Level and Result
 
@@ -125,7 +125,7 @@ Each fault was put into the code on purpose, the suite was run, and the file was
 
 ## 7. Live API check and database evidence (run C)
 
-The calls were made on 14/10/2026 against the running application and the local PostgreSQL database. The cleaned record is in docs/testing/live-check-2026-10-14.txt. The status calls were made against POST /requests/{id}/status from PR #115, with the body fields toStatus, expectedVersion and note.
+The calls were made on 14/10/2026 against the running application and the local PostgreSQL database. The cleaned record is in docs/testing/evidence/live-check-2026-10-14.txt. The status calls were made against POST /requests/{id}/status from PR #115, with the body fields toStatus, expectedVersion and note.
 
 | Call                                                                                | Expected                                     | Actual                                                                                        |
 | ----------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------- |

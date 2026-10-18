@@ -11,17 +11,17 @@ Authority: [SEN381_M3.pdf](../../SEN381_M3.pdf) — real cloud staging is **opti
 | FR008 accept + concurrency | `TC-A-01…09`, `TC-A-INT-03`; RTM-008 |
 | Simulated staging artefacts | `docs/staging/staging-vs-dev.md`, `docs/staging/demo-prep.md`, `docs/staging/rollback.md` |
 | Optional cloud artefacts (unused for freeze) | `Dockerfile`, `render.yaml`, `docs/staging/render-deploy.md` |
-| PED section drafts + paste pack | `docs/m3-adolf-sections.md`, `docs/PED/m3-adolf-paste.md` |
+| PED section drafts + paste pack | `docs/PED/contributions/m3-adolf-sections.md`, `docs/PED/contributions/m3-adolf-paste.md` |
 | Critical E2E against simulated staging | Playwright **3/3** on 2026-10-15 (`BASE_URL=http://127.0.0.1:5173`, Vite + demo API) |
 | PERF-LIST-01 (one small scenario) | **9 rows**, avg **5.9 ms**, 0% errors (`docs/testing/performance-list-evidence.md`) |
-| Traceability / doc hygiene | Per-test FR/RTM in `adolf-test-evidence.md`; Adolf stubs → `docs/` |
+| Traceability / doc hygiene | Per-test FR/RTM in `docs/testing/adolf-test-evidence.md`; old `Adolf/` stubs removed (all docs under `docs/`) |
 | Tech debt recorded | TD-006 (H2 triggers), TD-007 (SPA `permitAll`) |
 | Release Evidence Summary | `docs/release/m3-release-evidence-summary.md` |
 
 ## Remaining for Adolf (brief-minimum — no Render required)
 
 1. **Identify RC** — tag `v3.0.0-rc1` on the merge/commit that includes this close-out, or state that exact SHA in the PED submission block (see [`docs/staging/rollback.md`](../staging/rollback.md)).
-2. **Paste PED** — copy [`docs/PED/m3-adolf-paste.md`](../PED/m3-adolf-paste.md) into Word PED sections 2–4 and 8 (plus submission info block), then PDF as PED v3.0.
+2. **Paste PED** — copy [`docs/PED/contributions/m3-adolf-paste.md`](../PED/contributions/m3-adolf-paste.md) into Word PED sections 2–4 and 8 (plus submission info block), then PDF as PED v3.0.
 3. **Presentation demo** — follow [`docs/staging/demo-prep.md`](../staging/demo-prep.md) (simulated staging + critical journey).
 
 ## Optional only (public URL — not required by SEN381_M3.pdf §14)

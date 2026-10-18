@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Decision table for who may make each status change (FR011, D2 to D6, C4).
- * Expected results come from docs/desicions/D2-D6-status-transition-authority.md.
+ * Expected results come from docs/decisions/D2-D6-status-transition-authority.md.
  * No Spring context and no database.
  */
 class StatusTransitionDecisionTest {
