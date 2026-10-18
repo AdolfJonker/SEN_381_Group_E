@@ -48,6 +48,9 @@ This record holds the test design and results for role-based access, the role vi
 | TC-D-05 | Who may set Resolved or Closed | Decision table | Unit (black box on the guard) | FR011, D2–D6 | RTM-011 | Pass (local, 14/10/2026) |
 | TC-D-06 | Each role lands on its own view | Unit | Frontend unit | NFR003, FR012 | RTM-016 | Pass (13/10/2026) |
 | TC-D-07 | Category, status and search filters | Equivalence partitioning | Frontend unit | FR013, FR006 | RTM-013, RTM-006 | Pass (13/10/2026) |
+| TC-D-08 | Demo users switched off (postgres/staging default): no accounts created | Negative | Unit | RISK-004, NFR003 | RTM-016 | Pass (18/10/2026, CI run #41) |
+| TC-D-09 | Demo users switched on without a password: start-up stops, nothing saved | Negative | Unit | RISK-004 | RTM-016 | Pass (18/10/2026, CI run #41) |
+| TC-D-10 | Demo users switched on: three accounts saved with the configured password | Unit | Unit | RISK-004 | RTM-016 | Pass (18/10/2026, CI run #41) |
 
 ## 4. Test records
 
@@ -114,6 +117,13 @@ This record holds the test design and results for role-based access, the role vi
 * Elcke's `StatusTransitionDecisionTest` (23 cases, no TC ID yet) checks every role and ownership case for all moves. TC-E-05 to 08 check the same rules one at a time.
 * Both tests call the same `StatusTransitionGuard`, so they agree by design. TC-D-05 is the black-box view for FR011. Elcke's test is the wider white-box check.
 
+### TC-D-08 to TC-D-10 Demo accounts (RISK-004)
+* Basis: RISK-004 release blocker. Demo accounts with one known password were created on every profile and the login screen showed the password.
+* Input: DemoUserLoader with demo users off; on with a blank or missing password; on with a configured password. Mocked repository and password encoder.
+* Expected result: off creates nothing; on without a password throws and saves nothing; on with a password saves three accounts hashed from that password.
+* Evidence: `src/backend/src/test/java/civicconnect/config/DemoUserLoaderTest.java`. Production frontend build checked 18/10/2026: the built JavaScript contains neither the demo hint nor the password.
+* Interpretation: proves the rule in the loader. It does not prove a host's environment settings; staging must not set DEMO_USERS_ENABLED.
+
 ### TC-D-06 and TC-D-07 Frontend unit tests
 * Evidence: `src/frontend/services/roleLanding.test.js`, `requestFilters.test.js`. `npm test`: 11 pass, 0 fail (13/10/2026).
 * Interpretation: UI routing and filtering only. They are not the security control.
@@ -131,6 +141,13 @@ This record holds the test design and results for role-based access, the role vi
 ## 6. Manual UI check (supporting, not counted)
 
 Run against a local stub of the API on 13/10/2026: Management lands on the summary; IT Support + Open filter shows 1 of 7; Staff lands on the request list; search works; no sideways scroll at 375 px. Re-run against staging.
+
+### 375 px recheck (NFR005), 18/10/2026
+* Screens: login (with the dev-only demo hint showing, the widest case), Management landing (summary cards, filters, request table), Staff landing (search, filters, request table), Requester landing.
+* Method: headless Chromium at 375 x 812 against the frontend from the RISK-004 branch, with the API answered by fixed test data (5 requests with long titles). Measured the page width against the screen width and listed any element wider than the screen.
+* Result: page width 375 = screen width on all four screens; no element wider than the screen; no sideways scroll. Screenshots kept with the PED evidence.
+* Status: Pass. DEF-D01 stays fixed. Together with Elcke's recheck of the submit form and My requests (18/10/2026), DEF-E01 is closed.
+* Limit: stubbed API, not the live backend; layout only.
 
 ## 7. Defects found in this slice
 

@@ -10,7 +10,6 @@ RISK-004 Sensitive data exposed
 
 Evidence (M3): the M2 demo code had a public /api/users list with every email.
 Mitigation now in place: every /api/v1 route except health and login needs a signed-in user. Passwords are BCrypt hashes. Five failed logins lock the email for 15 minutes. The session cookie is HttpOnly and SameSite=Strict. A requester gets 403 for another requester's request (TC-D-INT-03). A secrets scan (gitleaks) runs in CI.
-Residual: DemoUserLoader creates three demo accounts with the same known password on every profile, including postgres, and the login screen shows that password. On staging, anyone could sign in as Management.
-Action: only create demo users on the demo profile, or read the password from an environment variable. [Team to agree; DemoUserLoader is in the bootstrap code.]
-Check 15/10/2026: DemoUserLoader on main is still a plain @Component (all profiles). The E2E tests also log in with this password. This must be fixed before the Render staging URL is public, or staging must be kept private.
-Prob: Medium (until the action is done). Impact: High. Priority: High. Status: Open.
+Fix (18/10/2026): DemoUserLoader only creates the demo accounts when civicconnect.demo-users.enabled is true. That is the default only on the demo profile (local, in-memory H2). On postgres and staging it is off unless DEMO_USERS_ENABLED is set, and then DEMO_PASSWORD must be set too (there is no default password, start-up stops without one). The password is no longer written to the log, and the login screen no longer shows it; the demo hint only appears on the local dev server. Tests: TC-D-08 to TC-D-10 (DemoUserLoaderTest).
+Residual: the demo profile still uses a known default password, which is acceptable because it only runs locally on an in-memory database.
+Prob: Low. Impact: High. Priority: Medium. Status: Mitigated.
