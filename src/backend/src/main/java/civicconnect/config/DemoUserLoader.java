@@ -13,8 +13,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * Creates the three demo accounts (RISK-004).
- * Only runs when civicconnect.demo-users.enabled is true. That is the default on the demo
- * profile (in-memory H2) and off on every other profile, including postgres and staging.
  * The password comes from configuration (DEMO_PASSWORD). It is never hard-coded in this class
  * and never written to the log. If demo users are enabled without a password, start-up stops.
  */
@@ -59,7 +57,7 @@ public class DemoUserLoader implements ApplicationRunner {
 
     private void ensureUser(String email, String name, Role role) {
         userRepository.findByEmail(email).ifPresentOrElse(existing -> {
-            // Keep existing row; refresh hash so the configured demo password always works.
+
             existing.setPasswordHash(passwordEncoder.encode(demoPassword));
             existing.setRole(role);
             existing.setName(name);

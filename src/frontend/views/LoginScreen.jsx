@@ -113,7 +113,7 @@ export default function LoginScreen({ onLogin }) {
             color: "var(--muted)"
           }}>
             <p style={{ margin: "0 0 0.5rem 0", fontWeight: 500 }}>
-              Demo accounts (local demo only; ask the team for the password)
+              Demo accounts (local demo only)
             </p>
             <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
               <li>requester@civicconnect.local</li>
