@@ -142,6 +142,13 @@ This record holds the test design and results for role-based access, the role vi
 
 Run against a local stub of the API on 13/10/2026: Management lands on the summary; IT Support + Open filter shows 1 of 7; Staff lands on the request list; search works; no sideways scroll at 375 px. Re-run against staging.
 
+### 375 px recheck (NFR005), 18/10/2026
+* Screens: login (with the dev-only demo hint showing, the widest case), Management landing (summary cards, filters, request table), Staff landing (search, filters, request table), Requester landing.
+* Method: headless Chromium at 375 x 812 against the frontend from the RISK-004 branch, with the API answered by fixed test data (5 requests with long titles). Measured the page width against the screen width and listed any element wider than the screen.
+* Result: page width 375 = screen width on all four screens; no element wider than the screen; no sideways scroll. Screenshots kept with the PED evidence.
+* Status: Pass. DEF-D01 stays fixed. Together with Elcke's recheck of the submit form and My requests (18/10/2026), DEF-E01 is closed.
+* Limit: stubbed API, not the live backend; layout only.
+
 ## 7. Defects found in this slice
 
 | ID | Description | Severity | Status | Resolution | Regression test |
