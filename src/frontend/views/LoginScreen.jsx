@@ -102,6 +102,8 @@ export default function LoginScreen({ onLogin }) {
             </button>
           </form>
 
+          {/* RISK-004: demo hint only on the local dev server, never in a production build. No password shown. */}
+          {import.meta.env.DEV && (
           <div style={{
             marginTop: "1.75rem",
             padding: "1rem",
@@ -111,7 +113,7 @@ export default function LoginScreen({ onLogin }) {
             color: "var(--muted)"
           }}>
             <p style={{ margin: "0 0 0.5rem 0", fontWeight: 500 }}>
-              Demo accounts (password for all: Password123!)
+              Demo accounts (local demo only; ask the team for the password)
             </p>
             <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
               <li>requester@civicconnect.local</li>
@@ -119,6 +121,7 @@ export default function LoginScreen({ onLogin }) {
               <li>management@civicconnect.local</li>
             </ul>
           </div>
+          )}
         </div>
       </main>
   );

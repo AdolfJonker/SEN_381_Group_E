@@ -19,6 +19,11 @@ server:
 civicconnect:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  # RISK-004: demo accounts are off unless switched on. The password has no default here,
+  # so postgres/staging can never start with a known password.
+  demo-users:
+    enabled: ${DEMO_USERS_ENABLED:false}
+    password: ${DEMO_PASSWORD:}
 
 ---
 # Real PostgreSQL database (default for local and hosting)
@@ -70,3 +75,9 @@ spring:
   h2:
     console:
       enabled: true
+
+# Demo profile only (local, in-memory H2): demo accounts on. Override with DEMO_PASSWORD.
+civicconnect:
+  demo-users:
+    enabled: true
+    password: ${DEMO_PASSWORD:Password123!}
