@@ -62,7 +62,10 @@ public class ServiceRequestService {
         try {
             category = RequestCategory.fromLabel(body.category());
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a category from the list.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Choose a category from the list."
+            );
         }
 
         User submitter = requireUser(submitterEmail);
@@ -74,7 +77,17 @@ public class ServiceRequestService {
         request.setStatus(RequestStatus.Open);
         request.setSubmittedBy(submitter);
 
-        return RequestResponse.from(requestRepository.save(request));
+        ServiceRequest savedRequest = requestRepository.save(request);
+
+        auditLogObserver.record(
+                savedRequest,
+                null,
+                RequestStatus.Open,
+                submitter,
+                "Initial status"
+        );
+
+        return RequestResponse.from(savedRequest);
     }
 
     /**
@@ -86,7 +99,10 @@ public class ServiceRequestService {
         User requester = requireUser(requesterEmail);
 
         return requestRepository.findBySubmittedById(requester.getId()).stream()
-                .sorted(Comparator.comparing(ServiceRequest::getCreatedAt, Comparator.reverseOrder()))
+                .sorted(Comparator.comparing(
+                        ServiceRequest::getCreatedAt,
+                        Comparator.reverseOrder()
+                ))
                 .map(ServiceRequestResponse::from)
                 .toList();
     }
@@ -98,10 +114,17 @@ public class ServiceRequestService {
     }
 
     @Transactional
-    public ServiceRequestDetailDto accept(String email, Long requestId, Integer expectedVersion) {
+    public ServiceRequestDetailDto accept(
+            String email,
+            Long requestId,
+            Integer expectedVersion
+    ) {
         User user = requireUser(email);
         if (user.getRole() != Role.Staff) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staff can accept a request.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only staff can accept a request."
+            );
         }
 
         ServiceRequest request = requireVisible(user, requestId);
@@ -115,8 +138,15 @@ public class ServiceRequestService {
         }
 
         if (!statusTransitionGuard.canPerformTransition(
-                RequestStatus.Open, RequestStatus.Assigned, user.getRole().name(), false)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to accept this request.");
+                RequestStatus.Open,
+                RequestStatus.Assigned,
+                user.getRole().name(),
+                false
+        )) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to accept this request."
+            );
         }
 
         RequestStatus from = request.getStatus();
@@ -125,14 +155,23 @@ public class ServiceRequestService {
         request.setUpdatedAt(Instant.now());
         requestRepository.saveAndFlush(request);
         auditLogObserver.record(request, from, RequestStatus.Assigned, user, null);
+
         return toDetail(request);
     }
 
     @Transactional
-    public ServiceRequestDetailDto updateStatus(String email, Long requestId, RequestStatus toStatus, Integer expectedVersion) {
+    public ServiceRequestDetailDto updateStatus(
+            String email,
+            Long requestId,
+            RequestStatus toStatus,
+            Integer expectedVersion
+    ) {
         User user = requireUser(email);
         if (user.getRole() != Role.Staff && user.getRole() != Role.Management) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to change this request.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to change this request."
+            );
         }
 
         ServiceRequest request = requireVisible(user, requestId);
@@ -147,12 +186,21 @@ public class ServiceRequestService {
 
         RequestStatus from = request.getStatus();
         if (!statusTransitionGuard.isLegalTransition(from, toStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, illegalTransitionMessage(from, toStatus));
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    illegalTransitionMessage(from, toStatus)
+            );
         }
 
         boolean isAssignedToUser = request.getAssignedTo() != null
                 && user.getId().equals(request.getAssignedTo().getId());
-        if (!statusTransitionGuard.canPerformTransition(from, toStatus, user.getRole().name(), isAssignedToUser)) {
+
+        if (!statusTransitionGuard.canPerformTransition(
+                from,
+                toStatus,
+                user.getRole().name(),
+                isAssignedToUser
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Only the staff member assigned to this request can update its status."
@@ -163,14 +211,22 @@ public class ServiceRequestService {
         request.setUpdatedAt(Instant.now());
         requestRepository.saveAndFlush(request);
         auditLogObserver.record(request, from, toStatus, user, null);
+
         return toDetail(request);
     }
 
     @Transactional
-    public ServiceRequestDetailDto addComment(String email, Long requestId, CreateCommentBody body) {
+    public ServiceRequestDetailDto addComment(
+            String email,
+            Long requestId,
+            CreateCommentBody body
+    ) {
         User user = requireUser(email);
         if (user.getRole() != Role.Staff && user.getRole() != Role.Management) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staff can add a comment on a request.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only staff can add a comment on a request."
+            );
         }
 
         ServiceRequest request = requireVisible(user, requestId);
@@ -181,21 +237,33 @@ public class ServiceRequestService {
         comment.setContent(body.content());
         comment.setCreatedAt(Instant.now());
         commentRepository.save(comment);
+
         return toDetail(request);
     }
 
     private User requireUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not signed in"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Not signed in"
+                ));
     }
 
     private ServiceRequest requireVisible(User user, Long requestId) {
         ServiceRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Request not found."
+                ));
+
         if (!requestListService.canView(user, request)) {
             // 403 matches RequestListService.getFor / NFR003 ASR-01 (not a silent 404).
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not view this request.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You may not view this request."
+            );
         }
+
         return request;
     }
 
@@ -212,8 +280,10 @@ public class ServiceRequestService {
         if (from == RequestStatus.Closed) {
             return "This request is already closed.";
         }
+
         RequestStatus next = statusTransitionGuard.nextStatus(from);
         String nextLabel = next == null ? "none" : displayStatus(next);
+
         return "Cannot change status from " + displayStatus(from) + " to " + displayStatus(to)
                 + ". The next status is " + nextLabel + ".";
     }
@@ -231,11 +301,13 @@ public class ServiceRequestService {
                 .stream()
                 .map(StatusHistoryDto::from)
                 .toList();
+
         List<CommentDto> comments = commentRepository
                 .findByRequestIdOrderByCreatedAtAsc(request.getId())
                 .stream()
                 .map(CommentDto::from)
                 .toList();
+
         return ServiceRequestDetailDto.from(request, history, comments);
     }
 }

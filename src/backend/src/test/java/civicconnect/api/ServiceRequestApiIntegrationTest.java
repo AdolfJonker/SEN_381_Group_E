@@ -2,6 +2,7 @@ package civicconnect.api;
 
 import civicconnect.records.RequestStatus;
 import civicconnect.records.ServiceRequest;
+import civicconnect.records.StatusHistory;
 import civicconnect.repositories.ServiceRequestRepository;
 import civicconnect.repositories.StatusHistoryRepository;
 import tools.jackson.databind.JsonNode;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,7 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * API/integration tests for Adolf's M3 persistence slice (demo/H2).
  * TC-A-INT-*: real Spring context, HTTP session auth, Flyway schema.
- * INT-01→RTM-001; INT-02→RTM-017; INT-03→RTM-008; INT-04→RTM-006/012/013; INT-05→RTM-010.
+ * INT-01 -> RTM-001; INT-02 -> RTM-017;
+ * INT-03 -> RTM-008; INT-04 -> RTM-006/012/013;
+ * INT-05 -> RTM-010.
  * None claim FR005/RTM-005.
  */
 @SpringBootTest
@@ -63,16 +67,52 @@ class ServiceRequestApiIntegrationTest {
     private ServiceRequestRepository requestRepository;
 
     @Test
-    @DisplayName("TC-A-INT-01 (FR001/RTM-001) Submit persists a unique request ID")
+    @DisplayName("TC-A-INT-01 (FR001/RTM-001) Submit persists a unique request ID and initial status history")
     void submitPersistsUniqueId() throws Exception {
         MockHttpSession session = login(REQUESTER);
 
-        Long id1 = createRequest(session, "Broken projector A", "Room 1 projector will not power on", "IT Support");
-        Long id2 = createRequest(session, "Broken projector B", "Room 2 projector will not power on", "IT Support");
+        Long id1 = createRequest(
+                session,
+                "Broken projector A",
+                "Room 1 projector will not power on",
+                "IT Support"
+        );
+        Long id2 = createRequest(
+                session,
+                "Broken projector B",
+                "Room 2 projector will not power on",
+                "IT Support"
+        );
 
         assertNotEquals(id1, id2);
         assertTrue(requestRepository.findById(id1).isPresent());
         assertTrue(requestRepository.findById(id2).isPresent());
+
+        List<StatusHistory> history1 =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(id1);
+        List<StatusHistory> history2 =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(id2);
+
+        assertEquals(1, history1.size(), "First request should have one initial history entry");
+        assertEquals(1, history2.size(), "Second request should have one initial history entry");
+
+        assertNull(history1.get(0).getFromStatus());
+        assertEquals(RequestStatus.Open, history1.get(0).getToStatus());
+        assertEquals(
+                REQUESTER,
+                statusHistoryRepository
+                        .findActorEmailsByRequestIdOrderByChangedAtAsc(id1)
+                        .get(0)
+        );
+
+        assertNull(history2.get(0).getFromStatus());
+        assertEquals(RequestStatus.Open, history2.get(0).getToStatus());
+        assertEquals(
+                REQUESTER,
+                statusHistoryRepository
+                        .findActorEmailsByRequestIdOrderByChangedAtAsc(id2)
+                        .get(0)
+        );
     }
 
     @Test
@@ -81,10 +121,16 @@ class ServiceRequestApiIntegrationTest {
         MockHttpSession requester = login(REQUESTER);
         MockHttpSession staff = login(STAFF);
 
-        Long requestId = createRequest(requester, "Leaky tap", "Tap drips in kitchen", "Maintenance");
+        Long requestId = createRequest(
+                requester,
+                "Leaky tap",
+                "Tap drips in kitchen",
+                "Maintenance"
+        );
         accept(staff, requestId);
 
-        long historyBefore = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+        long historyBefore =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
 
         mockMvc.perform(post("/api/v1/requests/" + requestId + "/status")
                         .session(staff)
@@ -94,7 +140,9 @@ class ServiceRequestApiIntegrationTest {
                                 """))
                 .andExpect(status().isBadRequest());
 
-        long historyAfter = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+        long historyAfter =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+
         assertEquals(historyBefore, historyAfter);
 
         ServiceRequest request = requestRepository.findById(requestId).orElseThrow();
@@ -107,10 +155,18 @@ class ServiceRequestApiIntegrationTest {
         MockHttpSession requester = login(REQUESTER);
         MockHttpSession staff = login(STAFF);
 
-        Long requestId = createRequest(requester, "Parallel lock test", "Concurrency check for version", "IT Support");
+        Long requestId = createRequest(
+                requester,
+                "Parallel lock test",
+                "Concurrency check for version",
+                "IT Support"
+        );
+
         JsonNode accepted = accept(staff, requestId);
         int version = accepted.get("version").asInt();
-        long historyBefore = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+
+        long historyBefore =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
@@ -119,23 +175,30 @@ class ServiceRequestApiIntegrationTest {
         AtomicInteger other = new AtomicInteger();
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
+
         try {
             List<Future<?>> futures = new ArrayList<>();
+
             for (int i = 0; i < 2; i++) {
                 futures.add(pool.submit(() -> {
                     try {
                         ready.countDown();
                         start.await(5, TimeUnit.SECONDS);
+
                         // Fresh login per thread so sessions are not shared across threads.
                         MockHttpSession threadStaff = login(STAFF);
-                        MvcResult result = mockMvc.perform(post("/api/v1/requests/" + requestId + "/status")
-                                        .session(threadStaff)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content("""
-                                                {"toStatus":"InProgress","expectedVersion":%d}
-                                                """.formatted(version)))
+
+                        MvcResult result = mockMvc.perform(
+                                        post("/api/v1/requests/" + requestId + "/status")
+                                                .session(threadStaff)
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content("""
+                                                        {"toStatus":"InProgress","expectedVersion":%d}
+                                                        """.formatted(version)))
                                 .andReturn();
+
                         int code = result.getResponse().getStatus();
+
                         if (code == 200) {
                             success.incrementAndGet();
                         } else if (code == 409) {
@@ -151,6 +214,7 @@ class ServiceRequestApiIntegrationTest {
 
             assertTrue(ready.await(5, TimeUnit.SECONDS));
             start.countDown();
+
             for (Future<?> future : futures) {
                 future.get(10, TimeUnit.SECONDS);
             }
@@ -162,9 +226,14 @@ class ServiceRequestApiIntegrationTest {
         assertEquals(1, conflict.get(), "exactly one update should conflict");
         assertEquals(0, other.get(), "no unexpected status codes");
 
-        long historyAfter = statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+        long historyAfter =
+                statusHistoryRepository.findByRequestIdOrderByChangedAtAsc(requestId).size();
+
         assertEquals(historyBefore + 1, historyAfter);
-        assertEquals(RequestStatus.InProgress, requestRepository.findById(requestId).orElseThrow().getStatus());
+        assertEquals(
+                RequestStatus.InProgress,
+                requestRepository.findById(requestId).orElseThrow().getStatus()
+        );
     }
 
     @Test
@@ -174,8 +243,19 @@ class ServiceRequestApiIntegrationTest {
         MockHttpSession staff = login(STAFF);
         MockHttpSession management = login(MANAGEMENT);
 
-        Long openIt = createRequest(requester, "WiFi down in lab", "No connectivity", "IT Support");
-        Long openMaint = createRequest(requester, "Broken chair", "Chair in hall B", "Maintenance");
+        Long openIt = createRequest(
+                requester,
+                "WiFi down in lab",
+                "No connectivity",
+                "IT Support"
+        );
+        Long openMaint = createRequest(
+                requester,
+                "Broken chair",
+                "Chair in hall B",
+                "Maintenance"
+        );
+
         accept(staff, openIt);
 
         mockMvc.perform(get("/api/v1/requests")
@@ -261,11 +341,16 @@ class ServiceRequestApiIntegrationTest {
                                 """.formatted(email, PASSWORD)))
                 .andExpect(status().isOk())
                 .andReturn();
+
         return (MockHttpSession) result.getRequest().getSession(false);
     }
 
-    private Long createRequest(MockHttpSession session, String title, String description, String category)
-            throws Exception {
+    private Long createRequest(
+            MockHttpSession session,
+            String title,
+            String description,
+            String category
+    ) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/requests")
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -279,7 +364,10 @@ class ServiceRequestApiIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+
+        return objectMapper.readTree(result.getResponse().getContentAsString())
+                .get("id")
+                .asLong();
     }
 
     private JsonNode accept(MockHttpSession staffSession, Long requestId) throws Exception {
@@ -291,6 +379,7 @@ class ServiceRequestApiIntegrationTest {
                                 """))
                 .andExpect(status().isOk())
                 .andReturn();
+
         return objectMapper.readTree(result.getResponse().getContentAsString());
     }
 }

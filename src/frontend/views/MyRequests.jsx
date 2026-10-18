@@ -1,4 +1,5 @@
-// MyRequests view (FR003 + FR004 / NFR001): requester's own requests with live status refresh
+
+ // MyRequests view (FR003 + FR004 / NFR001): requester's own requests with live status refresh
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchMyRequests } from "../services/client.js";
 import { detectStatusChanges } from "../services/statusChanges.js";
@@ -18,10 +19,12 @@ function formatDate(value) {
     if (!value) {
         return "";
     }
+
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
         return "";
     }
+
     return date.toLocaleDateString("en-ZA", {
         year: "numeric",
         month: "short",
@@ -29,7 +32,7 @@ function formatDate(value) {
     });
 }
 
-export default function MyRequests({ onSubmitClick }) {
+export default function MyRequests({ onSubmitClick, onSelectRequest }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -41,14 +44,16 @@ export default function MyRequests({ onSubmitClick }) {
             setLoading(true);
             setError("");
         }
+
         try {
             const data = await fetchMyRequests();
             const list = Array.isArray(data) ? data : [];
             const changes = detectStatusChanges(previousRef.current, list);
+
             if (changes.length > 0) {
-                const latest = changes[changes.length - 1];
-                setLastChange(latest);
+                setLastChange(changes[changes.length - 1]);
             }
+
             previousRef.current = list;
             setRequests(list);
         } catch (err) {
@@ -72,17 +77,21 @@ export default function MyRequests({ onSubmitClick }) {
         const id = setInterval(() => {
             load(true);
         }, POLL_INTERVAL_MS);
+
         return () => clearInterval(id);
     }, [load]);
 
     return (
         <div className="card">
             <h2 className="page-title">My requests</h2>
-            <p className="muted">The requests you have submitted, newest first. Status updates automatically.</p>
+            <p className="muted">
+                The requests you have submitted, newest first. Status updates automatically.
+            </p>
 
             {lastChange && (
                 <div className="alert alert-info" role="status">
-                    Request #{lastChange.id} moved from {STATUS_LABELS[lastChange.from] ?? lastChange.from} to{" "}
+                    Request #{lastChange.id} moved from{" "}
+                    {STATUS_LABELS[lastChange.from] ?? lastChange.from} to{" "}
                     {STATUS_LABELS[lastChange.to] ?? lastChange.to}.
                 </div>
             )}
@@ -99,7 +108,11 @@ export default function MyRequests({ onSubmitClick }) {
                         {error}
                     </div>
                     <div className="request-list-actions">
-                        <button type="button" className="btn-outline" onClick={() => load(false)}>
+                        <button
+                            type="button"
+                            className="btn-outline"
+                            onClick={() => load(false)}
+                        >
                             Try again
                         </button>
                     </div>
@@ -124,19 +137,39 @@ export default function MyRequests({ onSubmitClick }) {
                     {requests.map((request) => {
                         const statusKey = String(request.status ?? "");
                         const label = STATUS_LABELS[statusKey] ?? statusKey;
+
                         return (
                             <li key={request.id} className="request-item">
-                                <div className="request-item-head">
-                                    <span className="request-id">Request #{request.id}</span>
-                                    <span className={`status-badge status-${statusKey.toLowerCase()}`}>
-                                        {label}
+                                <button
+                                    type="button"
+                                    className="request-item-button"
+                                    onClick={() => onSelectRequest?.(request.id)}
+                                    aria-label={`View details for request ${request.id}: ${request.title}`}
+                                >
+                                    <div className="request-item-head">
+                                        <span className="request-id">
+                                            Request #{request.id}
+                                        </span>
+                                        <span
+                                            className={`status-badge status-${statusKey.toLowerCase()}`}
+                                        >
+                                            {label}
+                                        </span>
+                                    </div>
+
+                                    <p className="request-title">{request.title}</p>
+
+                                    <div className="request-meta">
+                                        <span>{request.category}</span>
+                                        <span>
+                                            Submitted {formatDate(request.createdAt)}
+                                        </span>
+                                    </div>
+
+                                    <span className="request-open-hint">
+                                        View request details →
                                     </span>
-                                </div>
-                                <p className="request-title">{request.title}</p>
-                                <div className="request-meta">
-                                    <span>{request.category}</span>
-                                    <span>Submitted {formatDate(request.createdAt)}</span>
-                                </div>
+                                </button>
                             </li>
                         );
                     })}
