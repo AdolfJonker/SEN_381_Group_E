@@ -48,6 +48,9 @@ This record holds the test design and results for role-based access, the role vi
 | TC-D-05 | Who may set Resolved or Closed | Decision table | Unit (black box on the guard) | FR011, D2–D6 | RTM-011 | Pass (local, 14/10/2026) |
 | TC-D-06 | Each role lands on its own view | Unit | Frontend unit | NFR003, FR012 | RTM-016 | Pass (13/10/2026) |
 | TC-D-07 | Category, status and search filters | Equivalence partitioning | Frontend unit | FR013, FR006 | RTM-013, RTM-006 | Pass (13/10/2026) |
+| TC-D-08 | Demo users switched off (postgres/staging default): no accounts created | Negative | Unit | RISK-004, NFR003 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
+| TC-D-09 | Demo users switched on without a password: start-up stops, nothing saved | Negative | Unit | RISK-004 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
+| TC-D-10 | Demo users switched on: three accounts saved with the configured password | Unit | Unit | RISK-004 | RTM-016 | [TO COMPLETE: result on v4.0.0] |
 
 ## 4. Test records
 
@@ -113,6 +116,13 @@ This record holds the test design and results for role-based access, the role vi
 * TC-D-05 checks only Resolved and Closed (12 rules: 3 roles × assigned Y/N × 2 targets).
 * Elcke's `StatusTransitionDecisionTest` (23 cases, no TC ID yet) checks every role and ownership case for all moves. TC-E-05 to 08 check the same rules one at a time.
 * Both tests call the same `StatusTransitionGuard`, so they agree by design. TC-D-05 is the black-box view for FR011. Elcke's test is the wider white-box check.
+
+### TC-D-08 to TC-D-10 Demo accounts (RISK-004)
+* Basis: RISK-004 release blocker. Demo accounts with one known password were created on every profile and the login screen showed the password.
+* Input: DemoUserLoader with demo users off; on with a blank or missing password; on with a configured password. Mocked repository and password encoder.
+* Expected result: off creates nothing; on without a password throws and saves nothing; on with a password saves three accounts hashed from that password.
+* Evidence: `src/backend/src/test/java/civicconnect/config/DemoUserLoaderTest.java`. Production frontend build checked 18/10/2026: the built JavaScript contains neither the demo hint nor the password.
+* Interpretation: proves the rule in the loader. It does not prove a host's environment settings; staging must not set DEMO_USERS_ENABLED.
 
 ### TC-D-06 and TC-D-07 Frontend unit tests
 * Evidence: `src/frontend/services/roleLanding.test.js`, `requestFilters.test.js`. `npm test`: 11 pass, 0 fail (13/10/2026).
