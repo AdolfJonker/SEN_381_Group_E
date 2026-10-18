@@ -62,27 +62,41 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   const outPath = join(outDir, "performance-list-evidence.md");
 
+  const isLocal = /localhost|127\.0\.0\.1/.test(base);
+  const envLabel = isLocal
+    ? `**Simulated staging** — local demo/H2 (\`${base}\`). Satisfies M3 one-scenario exercise; public Render optional (SEN381_M3.pdf §14).`
+    : `**Cloud staging** (\`${base}\`).`;
+  const statusLine = errors === 0
+    ? (isLocal
+      ? `Pass (simulated-staging characterisation; ${lastCount} rows)`
+      : `Pass (cloud-staging characterisation; ${lastCount} rows)`)
+    : "Completed with errors — investigate before release";
+  const interpretation = targetMs == null
+    ? (isLocal
+      ? "No contractual SLA. Warm-stack characterisation on the M3 simulated staging API. Cloud re-run optional only."
+      : "No contractual SLA. Free-tier cloud staging characterisation under a light sequential load.")
+    : avg != null && avg <= targetMs
+      ? `Average under the ${targetMs} ms comparison target.`
+      : `Average above the ${targetMs} ms comparison target — do not claim production readiness.`;
+
   const md = `# Performance evidence — request list (Adolf M3)
 
 | Field | Value |
 |---|---|
-| Basis | NFR-style list responsiveness for FR005/FR006 staff list |
+| Basis | NFR-style list responsiveness for **FR006** staff list (hot path after role strategy; not FR005/RTM-005) |
 | Why selected | List query is the hot path behind indexes on \`submitted_by_id\` / \`assigned_to_id\` |
-| Technique | Timed HTTP GET against staging/dev API |
-| Environment | \`${base}\` |
+| Technique | Timed HTTP GET as authenticated staff |
+| Environment | ${envLabel} |
 | Data size (rows returned, last call) | ${lastCount} |
 | Workload | ${iterations} sequential GETs as \`${email}\` |
 | Duration (wall, successful calls) | avg ${avg?.toFixed(1) ?? "n/a"} ms; p95 ${p95?.toFixed(1) ?? "n/a"} ms |
-| Response time target | ${targetMs == null ? "None justified for M3 free-tier staging — recorded for comparison only" : `${targetMs} ms`} |
+| Response time target | ${targetMs == null ? "None justified for M3 — recorded for comparison only" : `${targetMs} ms`} |
 | Error rate | ${(errorRate * 100).toFixed(1)}% (${errors}/${iterations}) |
-| Status | ${errors === 0 ? "Pass (completed without HTTP errors)" : "Completed with errors — investigate before release"} |
+| Status | ${statusLine} |
 | Evidence | Output of \`scripts/perf-list.mjs\` on ${new Date().toISOString()} |
-| Interpretation | ${targetMs == null
-    ? "No contractual SLA exists; this run only characterises free-tier staging under a light sequential load."
-    : avg != null && avg <= targetMs
-      ? `Average under the ${targetMs} ms comparison target.`
-      : `Average above the ${targetMs} ms comparison target — do not claim production readiness.`} |
+| Interpretation | ${interpretation} |
 | What this does **not** prove | Production-scale concurrent municipal users, cold-start after free-tier sleep, or multi-region latency. |
+| Next run | ${isLocal ? "Optional: \`STAGING_BASE_URL=https://… node scripts/perf-list.mjs\` if Render is deployed later" : "Optional: re-run after major list-query changes."} |
 
 ## Raw successful durations (ms)
 
