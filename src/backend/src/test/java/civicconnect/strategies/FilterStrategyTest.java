@@ -91,4 +91,11 @@ class FilterStrategyTest {
         assertEquals(2, strategy.getFilteredRequests(9L).size());
         assertTrue(strategy.canView(manager, request(requester, null, RequestStatus.Closed)));
     }
+
+    // Gate check (PED 5.5): this test fails on purpose to prove CI blocks the merge. Do not merge.
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("GATE-CHECK deliberate failure: proves the required CI check blocks merging (do not merge)")
+    void deliberateFailureForGateEvidence() {
+        org.junit.jupiter.api.Assertions.assertEquals(1, 2, "Deliberate failure for the CI gate evidence");
+    }
 }
