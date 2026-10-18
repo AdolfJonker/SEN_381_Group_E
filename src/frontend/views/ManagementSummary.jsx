@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { fetchRequests, fetchSummary } from "../services/client.js";
 import { CATEGORIES, STATUSES, STATUS_LABELS } from "../services/requestOptions.js";
 import RequestTable from "./RequestTable.jsx";
+import { Icon } from "./Visuals.jsx";
 import "../styles/views.css";
 
 /** Management landing view (FR012, FR013). Summary and filtered list come from the server. */
 
-export default function ManagementSummary({ onSelect }) {
+export default function ManagementSummary({ user, onSelect }) {
+  const firstName = (user?.name || "").trim().split(/\s+/)[0];
   const [summary, setSummary] = useState(null);
   const [requests, setRequests] = useState([]);
   const [status, setStatus] = useState("");
@@ -56,14 +58,14 @@ export default function ManagementSummary({ onSelect }) {
   const hasFilter = Boolean(status || category);
 
   const mainCards = [
-    { key: "Open", label: "Open", value: summary?.open, status: "Open" },
-    { key: "Overdue", label: "Overdue", value: summary?.overdue, hint: "Not resolved after 7 days" },
-    { key: "Resolved", label: "Resolved", value: summary?.resolved, status: "Resolved" },
-    { key: "Closed", label: "Closed", value: summary?.closed, status: "Closed" },
+    { key: "Open", label: "Open", value: summary?.open, status: "Open", icon: "tag" },
+    { key: "Overdue", label: "Overdue", value: summary?.overdue, hint: "Not resolved after 7 days", icon: "clock" },
+    { key: "Resolved", label: "Resolved", value: summary?.resolved, status: "Resolved", icon: "chat" },
+    { key: "Closed", label: "Closed", value: summary?.closed, status: "Closed", icon: "list" },
   ];
   const workCards = [
-    { key: "Assigned", label: "Assigned", value: summary?.assigned, status: "Assigned" },
-    { key: "InProgress", label: "In Progress", value: summary?.inProgress, status: "InProgress" },
+    { key: "Assigned", label: "Assigned", value: summary?.assigned, status: "Assigned", icon: "user" },
+    { key: "InProgress", label: "In Progress", value: summary?.inProgress, status: "InProgress", icon: "refresh" },
   ];
 
   function renderCard(card, small = false) {
@@ -71,6 +73,9 @@ export default function ManagementSummary({ onSelect }) {
     const className = `summary-card tone-${card.key}${small ? " small" : ""}${active ? " active" : ""}`;
     const content = (
       <>
+        <span className="summary-icon" aria-hidden="true">
+          <Icon name={card.icon} />
+        </span>
         <span className="summary-value">{card.value ?? "–"}</span>
         <span className="summary-label">{card.label}</span>
         {card.hint ? <span className="summary-hint">{card.hint}</span> : null}
@@ -106,6 +111,7 @@ export default function ManagementSummary({ onSelect }) {
       ) : null}
 
       <section className="card" aria-labelledby="summary-heading">
+        {firstName && <p className="eyebrow">Hi {firstName}</p>}
         <h2 id="summary-heading" className="view-title">Service activity summary</h2>
         <p className="muted view-sub">Counts across all requests. Click a status to filter the list.</p>
         <div className="summary-grid">{mainCards.map((c) => renderCard(c))}</div>
@@ -124,8 +130,9 @@ export default function ManagementSummary({ onSelect }) {
                   }.`}
             </p>
           </div>
-          <button type="button" className="btn-outline" onClick={() => setReloadKey((k) => k + 1)}>
-            Refresh
+          <button type="button" className="btn-outline btn-icon" onClick={() => setReloadKey((k) => k + 1)}>
+            <Icon name="refresh" />
+            <span>Refresh</span>
           </button>
         </div>
 

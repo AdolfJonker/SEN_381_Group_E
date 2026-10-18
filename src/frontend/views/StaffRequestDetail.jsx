@@ -7,6 +7,7 @@ import {
 } from "../services/client.js";
 import { formatStatus, formatWhen, nextStatus, statusActionLabel } from "../services/format.js";
 import { COMMENT_MAX, validateComment } from "../services/validation.js";
+import { CategoryIcon, Icon, StatusSteps } from "./Visuals.jsx";
 
 export default function StaffRequestDetail({ requestId, currentUserId, onBack }) {
     const [request, setRequest] = useState(null);
@@ -123,10 +124,11 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
     const canMoveStatus = request && upcoming && (request.status === "Open" || isAssignee);
 
     return (
-        <div className="card">
-            <div className="form-actions">
-                <button type="button" className="btn-outline" onClick={onBack}>
-                    Back to requests
+        <div className="card detail-card">
+            <div className="detail-top">
+                <button type="button" className="btn-ghost btn-icon" onClick={onBack}>
+                    <Icon name="back" />
+                    <span>Back to requests</span>
                 </button>
             </div>
 
@@ -139,14 +141,17 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
 
             {request && (
                 <>
-                    <div className="detail-heading">
-                        <h2 className="page-title">
-                            #{request.id} {request.title}
-                        </h2>
-                        <span className={`status-pill status-${String(request.status || "").toLowerCase()}`}>
+                    <div className="detail-hero">
+                        <CategoryIcon category={request.category} size="lg" />
+                        <div className="detail-heading">
+                            <span className="request-id">Request #{request.id}</span>
+                            <h2 className="page-title">{request.title}</h2>
+                        </div>
+                        <span className={`status-badge status-${String(request.status || "").toLowerCase()}`}>
                             {formatStatus(request.status)}
                         </span>
                     </div>
+                    <StatusSteps status={request.status} showLabels />
 
                     {actionMessage && (
                         <div className="alert alert-success" role="status">
@@ -159,32 +164,13 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
                         </div>
                     )}
 
-                    <dl className="meta-grid">
-                        <div>
-                            <dt>Category</dt>
-                            <dd>{request.category}</dd>
-                        </div>
-                        <div>
-                            <dt>Submitted</dt>
-                            <dd>{formatWhen(request.createdAt)}</dd>
-                        </div>
-                        <div>
-                            <dt>Last updated</dt>
-                            <dd>{formatWhen(request.updatedAt)}</dd>
-                        </div>
-                        <div>
-                            <dt>Submitted by</dt>
-                            <dd>{request.submittedByName}</dd>
-                        </div>
-                        <div>
-                            <dt>Assigned to</dt>
-                            <dd>{request.assignedToName || "Unassigned"}</dd>
-                        </div>
-                    </dl>
 
+                    <div className="detail-grid">
+                    <div className="detail-main">
                     <h3 className="section-title">Description</h3>
                     <p className="description-block">{request.description}</p>
 
+                    <div className="next-step">
                     <h3 className="section-title">Next step</h3>
                     {request.status === "Closed" ? (
                         <p className="muted">This request is closed. No further status change is available.</p>
@@ -206,36 +192,14 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
                             Only the staff member assigned to this request can move it forward.
                         </p>
                     )}
-
-                    <h3 className="section-title">Status history</h3>
-                    {request.history?.length ? (
-                        <ol className="timeline">
-                            {request.history.map((entry) => (
-                                <li key={entry.id}>
-                                    <strong>
-                                        {entry.fromStatus
-                                            ? `${formatStatus(entry.fromStatus)} → ${formatStatus(entry.toStatus)}`
-                                            : "Submitted"}
-                                    </strong>
-                                    <div className="muted">
-                                        {entry.changedByName}
-                                        {" · "}
-                                        {formatWhen(entry.changedAt)}
-                                    </div>
-                                    {entry.note && <p>{entry.note}</p>}
-                                </li>
-                            ))}
-                        </ol>
-                    ) : (
-                        <p className="muted">No status changes yet.</p>
-                    )}
+                    </div>
 
                     <h3 className="section-title">Comments</h3>
                     {request.comments?.length ? (
                         <ul className="comment-list">
                             {request.comments.map((entry) => (
                                 <li key={entry.id}>
-                                    <div className="muted">
+                                    <div className="muted small">
                                         {entry.authorName}
                                         {" · "}
                                         {formatWhen(entry.createdAt)}
@@ -275,6 +239,55 @@ export default function StaffRequestDetail({ requestId, currentUserId, onBack })
                             </button>
                         </div>
                     </form>
+                    </div>
+                    <aside className="detail-side">
+                    <dl className="meta-grid">
+                        <div>
+                            <dt>Category</dt>
+                            <dd>{request.category}</dd>
+                        </div>
+                        <div>
+                            <dt>Submitted</dt>
+                            <dd>{formatWhen(request.createdAt)}</dd>
+                        </div>
+                        <div>
+                            <dt>Last updated</dt>
+                            <dd>{formatWhen(request.updatedAt)}</dd>
+                        </div>
+                        <div>
+                            <dt>Submitted by</dt>
+                            <dd>{request.submittedByName}</dd>
+                        </div>
+                        <div>
+                            <dt>Assigned to</dt>
+                            <dd>{request.assignedToName || "Unassigned"}</dd>
+                        </div>
+                    </dl>
+                    <h3 className="section-title">Status history</h3>
+                    {request.history?.length ? (
+                        <ol className="timeline">
+                            {request.history.map((entry) => (
+                                <li key={entry.id}>
+                                    <strong>
+                                        {entry.fromStatus
+                                            ? `${formatStatus(entry.fromStatus)} → ${formatStatus(entry.toStatus)}`
+                                            : "Submitted"}
+                                    </strong>
+                                    <div className="muted small">
+                                        {entry.changedByName}
+                                        {" · "}
+                                        {formatWhen(entry.changedAt)}
+                                    </div>
+                                    {entry.note && <p>{entry.note}</p>}
+                                </li>
+                            ))}
+                        </ol>
+                    ) : (
+                        <p className="muted">No status changes yet.</p>
+                    )}
+
+                    </aside>
+                    </div>
                 </>
             )}
         </div>

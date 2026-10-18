@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login } from "../services/client.js";
 import { validateLoginForm } from "../services/validation.js";
+import { BrandMark, CityScene } from "./Visuals.jsx";
 
 export default function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -34,94 +35,80 @@ export default function LoginScreen({ onLogin }) {
 
   return (
       <main className="page login-page">
-        <div className="card" style={{ width: "100%", maxWidth: "400px" }}>
-          <h1 style={{
-            margin: "0 0 0.25rem 0",
-            color: "#000080",
-            fontSize: "1.75rem",
-            textAlign: "center"
-          }}>
-            CivicConnect
-          </h1>
-          <p style={{
-            margin: "0 0 1.75rem 0",
-            color: "var(--muted)",
-            textAlign: "center"
-          }}>
-            Sign in to continue
-          </p>
-
-          <form onSubmit={handleSubmit} noValidate>
-            <div style={{ marginBottom: "1rem" }}>
-              <label htmlFor="email">Email</label>
-              <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="username"
-                  inputMode="email"
-                  maxLength={255}
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={submitting}
-                  required
-              />
-              {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
+        <div className="login-shell">
+          <div className="login-hero">
+            <div className="login-brand">
+              <BrandMark />
+              <span>CivicConnect</span>
             </div>
-
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label htmlFor="password">Password</label>
-              <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  maxLength={128}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={submitting}
-                  required
-              />
-              {fieldErrors.password && <p className="error">{fieldErrors.password}</p>}
-            </div>
-
-            {formError && (
-                <p className="error" role="alert" style={{ marginBottom: "1rem" }}>
-                  {formError}
-                </p>
-            )}
-
-            <button
-                type="submit"
-                disabled={submitting}
-                style={{ width: "100%" }}
-            >
-              {submitting ? "Signing in…" : "Sign in"}
-            </button>
-          </form>
-
-          {/* RISK-004: demo hint only on the local dev server, never in a production build. No password shown. */}
-          {import.meta.env.DEV && (
-          <div style={{
-            marginTop: "1.75rem",
-            padding: "1rem",
-            background: "var(--subtle)",
-            borderRadius: "10px",
-            fontSize: "0.875rem",
-            color: "var(--muted)"
-          }}>
-            <p style={{ margin: "0 0 0.5rem 0", fontWeight: 500 }}>
-              Demo accounts (local demo only)
-            </p>
-            <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
-              <li>requester@civicconnect.local</li>
-              <li>staff@civicconnect.local</li>
-              <li>management@civicconnect.local</li>
-            </ul>
+            <CityScene />
           </div>
-          )}
+
+          <div className="login-card">
+            <h1 className="login-title">Report it. Track it. Sorted.</h1>
+            <p className="login-sub">
+              Sign in to report problems around you and follow them until they are fixed.
+            </p>
+
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="field">
+                <label htmlFor="email">Email</label>
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="username"
+                    inputMode="email"
+                    maxLength={255}
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={submitting}
+                    required
+                />
+                {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
+              </div>
+
+              <div className="field">
+                <label htmlFor="password">Password</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    maxLength={128}
+                    placeholder="Your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={submitting}
+                    required
+                />
+                {fieldErrors.password && <p className="error">{fieldErrors.password}</p>}
+              </div>
+
+              {formError && (
+                  <div className="alert alert-error" role="alert">
+                    {formError}
+                  </div>
+              )}
+
+              <button type="submit" className="btn-block" disabled={submitting}>
+                {submitting ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
+
+            {/* RISK-004: demo hint only on the local dev server, never in a production build. No password shown. */}
+            {import.meta.env.DEV && (
+            <div className="demo-hint">
+              <p className="demo-hint-title">Demo accounts (local demo only)</p>
+              <ul>
+                <li>requester@civicconnect.local</li>
+                <li>staff@civicconnect.local</li>
+                <li>management@civicconnect.local</li>
+              </ul>
+            </div>
+            )}
+          </div>
         </div>
       </main>
   );
